@@ -1,17 +1,10 @@
 package com.woony.core.domain.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 
 @Getter
-@NoArgsConstructor
+@Value
 public class UpdateDateRequestWithString {
     private String dateAsString;
-
-    @Builder
-    public UpdateDateRequestWithString(String dateAsString) {
-        this.dateAsString = dateAsString;
-    }
 }
