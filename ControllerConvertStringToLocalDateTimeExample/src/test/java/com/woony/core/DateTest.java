@@ -63,7 +63,7 @@ public class DateTest {
                                             .build()); // 엔티티 저장
 
         String afterFetchDate = "08-Apr-2032 12:58:47 PM";
-        UpdateDateRequestWithString udw = new UpdateDateRequestWithString().builder().dateAsString(afterFetchDate).build();
+        UpdateDateRequestWithString udw = new UpdateDateRequestWithString(afterFetchDate);
         Long updateId = dateEntity.getId();
         String url = "http://localhost:" + port + "/updateDateWithString/" + updateId;
         HttpEntity<UpdateDateRequestWithString> requestEntity = new HttpEntity<>(udw);
