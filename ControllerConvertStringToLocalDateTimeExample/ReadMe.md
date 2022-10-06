@@ -24,6 +24,25 @@ public class UpdateDateRequestWithString {
 }
 ```
 
+### UpdateDateService: String -> Timestamp 변환 로직 추가
+
+```java
+@Transactional
+    public void updateCurrentDateWithString(long id, String dateAsString) {
+
+        LocalDateTime ldt =  LocalDateTime.from(df.parse(dateAsString));
+        LocalDateTime nowDate = LocalDateTime.now();
+
+        if (ldt.isAfter(nowDate)) {
+            logger.error("The fetched date {} is later than current date: {}", ldt, nowDate);
+            throw new IllegalArgumentException("fetchDate is later than current Date.");
+        }
+
+        DateEntity dateEntity = dateEntityRepository.findById(id).orElseThrow(() -> new DateResourceNotFoundException("There's not entity."));
+        dateEntity.updateDate(ldt);
+    }
+```
+
 그런데 이렇게 리뷰가 들어왔다.
 
 > Can't we use LocalDateTime or ZonedDateTime as a type?
