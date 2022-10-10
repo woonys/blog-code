@@ -118,7 +118,21 @@ object header에는 헤더라는 애의 특성에 맞게 메타데이터가 들�
 1. Mark Word: 인스턴스의 메타데이터를 가리키는 포인터로, GC와 객체 lock을 걸 때 사용한다. 해시코드를 포함하고 있으며, 식별할 수도 있다. 64비트 시스템 기준으로 8바이트에 해당.
 2. Klass Word: 클래스의 메타데이터를 가리키는 포인터. 얘는 4바이트.
 3. Header: 자바의 모든 오브젝트들은 8바이트의 배수로 사이즈를 맞춘다. 이를 위해, 만약 (Mark + Klass) + Variable의 총합이 8의 배수로 맞아떨어지지 않을 경우 패딩이 추가된다.
-따라서 헤더의 크기는 패딩이 추가되지 않는 기본 상태에서는 12바이트에 해당한다. 
+따라서 헤더의 크기는 패딩이 추가되지 않는 기본 상태에서는 12바이트에 해당한다.
+
+오케이, 헤더에는 이렇게 들어가고. 이제 남은 건 Object variable이다. 여기에는 무엇이 들어갈까?
+
+
+```java
+java.lang.String object internals:
+OFF  SZ     TYPE DESCRIPTION               VALUE
+  0   8          (object header: mark)     0x0000000000000001 (non-biasable; age: 0)
+  8   4          (object header: class)    0x000016d0
+ 12   4   char[] String.value              []
+ 16   4      int String.hash               0
+ 20   4          (object alignment gap)    
+Instance size: 24 bytes
+```
 
 
 

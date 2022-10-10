@@ -1,10 +1,11 @@
 package com.example.javanullandemptystringexample;
 
+import org.openjdk.jol.info.ClassLayout;
+
 public class ParseSpringClass {
-    public class Strings {
-        public String string;
-    }
+
     public static void main(String[] args) {
-        System.out.println(ClassLayout.parseInstance(Strings.class).toPrintable());
+        String str = "";
+        System.out.println(ClassLayout.parseInstance(str).toPrintable());
     }
 }
