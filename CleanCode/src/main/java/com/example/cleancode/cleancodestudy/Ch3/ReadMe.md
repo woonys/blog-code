@@ -235,3 +235,54 @@ Point p = new Point(0, 0)
 이항 함수가 무조건 나쁘다는 소리는 아니다. 하지만 그만큼 위험하니 가능하면 단항 함수로 바꾸도록 애써야 한다.
 
 ## 5. 부수 효과를 일으키지 마라!
+
+함수에서 한 가지를 하겠다고 약속하고선 남몰래 다른 짓을 하는 부수 효과는 일으켜서는 안된다. 여기서 부수 효과란, 
+예상치 못하게 클래스 변수/함수로 넘어온 인수/시스템 전역 변수 등 예상치 못하게 변수 값을 수정하는 짓을 말한다. 예제를 보자.
+
+```java
+public class UserValidator {
+    private Cryptographer cryptographer;
+
+    public boolean checkPassword(String userName, String password) {
+        User user = UserGateway.findByName(userName);
+        if (user != User.NULL) {
+            String codePhrase = user.getPharaseEncodedByPassword();
+            String phrase = cryptographer.decrypt(codedPhrase, password);
+            if ("Valid Password".equals(phrase)) {
+                Session.initialize();
+                return true;
+            }
+        }
+        return false;
+    }
+}
+```
+
+여기서 함수 checkPassword()가 일으키는 부수 효과는 Session.initialize()를 호출할 때다. checkPassword는 이름 그대로 암호를 확인하는 함수이다.
+이름만 봐서는 세션을 초기화한다는 사실이 드러나지 않는다. 그래서 함수 이름만 보고 함수를 호출하는 사용자는 
+사용자를 인증하면서 initialize()까지 같이 호출해 기존 세션 정보를 지워버리는 일을 자기도 모르는 새 감행하게 된다.
+
+위의 checkPassword 함수는 특정 상황, 그러니까 세션을 초기화해도 괜찮은 경우에만 호출 가능한 함수다. 이러한 부수 효과를 일으키지 않으려면 
+이런 효과까지 함수명에 명시해주는 게 좋다. 이를테면 위 함수명은 `checkPasswordANdInitializeSession`이라고 짓는 게 훨씬 좋다. 물론 함수가 한 가지 일만 한다는 규칙은 위반하긴 하지만.
+
+## 6. 명령과 조회를 분리하라!
+
+함수는 아래 둘 중 하나만 한다고 보면 된다. 둘 다 하면 안 된다.
+
+1. 뭔가를 수행하거나 - 객체 상태를 변경
+2. 뭔가에 답하거나 - 객체 정보를 반환
+
+만약 하나의 함수가 위의 두 가지를 다 하면 혼란을 일으킬 수 있다. 예시를 보자.
+
+`public boolean set(String attribute, String value);`
+
+이 함수는 이름이 attribute인 속성을 찾아 값을 value로 설정한 후(1. 상태 변경) 성공하면 true/실패하면 false를 반환(2. 객체 정보를 반환)하는 함수이다.
+이때, 이 함수를 사용하는 괴상한 예시가 등장한다.
+
+`if (set("username", "unclebob"))...`
+
+이 함수가 무엇을 뜻할지 시그니쳐만 보고 생각해보자. "username"이 "unclebob"으로 설정되어 있는지 확인하는 코드인가?
+아니면 "username"을 "unclebob"으로 설정하는 코드인가? 이렇듯 함수를 호출하는 코드만 봐서는 의미가 모호하다. 이는 set이라는 단어가 동사인지 형용사인지 구분하기 어렵기 때문이다.
+
+
+
