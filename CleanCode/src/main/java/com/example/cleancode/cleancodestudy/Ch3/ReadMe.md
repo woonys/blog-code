@@ -282,7 +282,246 @@ public class UserValidator {
 `if (set("username", "unclebob"))...`
 
 이 함수가 무엇을 뜻할지 시그니쳐만 보고 생각해보자. "username"이 "unclebob"으로 설정되어 있는지 확인하는 코드인가?
-아니면 "username"을 "unclebob"으로 설정하는 코드인가? 이렇듯 함수를 호출하는 코드만 봐서는 의미가 모호하다. 이는 set이라는 단어가 동사인지 형용사인지 구분하기 어렵기 때문이다.
+아니면 "username"을 "unclebob"으로 설정하는 코드인가? 이렇듯 함수를 호출하는 코드만 봐서는 의미가 모호하다. 
+이는 set이라는 단어가 동사인지 형용사인지 구분하기 어렵기 때문이다. 구현 당시에는 `set`을 동사로 의도했으나 if문에 넣고 보면 형용사로 느껴진다.
+함수 이름을 바꿀 수도 있지만 애초에 객체 자체를 명령하는 위치에 넣었다면 이런 일은 없었을 것이다.
+
+진짜 해결책은 명령과 조회를 분리해 애초에 혼란을 없애는 것이다.
+
+## 7. 오류 코드보다 예외를 사용하라!
+
+명령 함수에서 오류 코드를 반환하는 방식은 명령/조회 분리 규칙을 미묘하게 위반한다.
+
+`if (deletePage(page) == E_OK)`
+
+위 코드는 동사/형용사 혼란을 일으키지는 않으나 여러 단계로 중첩되는 코드를 만들어낸다. 
+
+```java
+if (deletePage(page) == E_OK) {
+            if (registry.deleteReference(page.name) == E_OK) {
+                if (configKeys.deleteKey(page.name.makeKey()) == E_OK) {
+                    logger.log("page deleted");
+                } else {
+                    logger.log("configKey not deleted");
+                }
+            } else {
+                logger.log("deleteReference from registry failed");
+            }
+        } else {
+            logger.log("delete failed");
+            return E_ERROR;
+        }
+```
+
+반면에 오류 코드 대신 예외를 사용하면 오류 처리 코드가 원래 코드에서 분리되므로 코드가 깔끔해진다.
+
+```java
+try {
+    deletePage(page);
+    registry.deleteReference(page.name);
+    configKeys.deleteKey(page.name.makeKey());
+}
+catch (Exception e) {
+    logger.log(e.getMessage());
+}
+```
+
+### Try/Catch 블록 뽑아내기
+
+try/catch 블록은 구리다. 코드 구조에 혼란을 일으키며, 정상 동작과 오류 처리 동작을 뒤섞는다. 그러니 try/catch 블록을 별도 함수로 뽑아내는 편이 좋다.
+
+```java
+public void delete(Page page) {
+    try {
+        deletePageAndAllReferences(page);
+     } catch (Exception e) {
+        logError(e);
+     }
+}
 
 
+private void deletePageAndAllReferences(Page page) throws Exception {
+        deletePage(page);
+        registry.deleteReference(page.name);
+        configKeys.deleteKey(page.name.makeKey());
+}
 
+private void logError(Exception e) {
+        logger.log(e.getMessage());
+}
+```
+
+위에서 delete 함수는 모든 오류를 처리한다. 그러니 코드를 이해하기 훨씬 쉽다. 그런데 실제로 페이지를 제거하는 함수는 deletePageAndAllReferences다.
+deletePageAndAllReferences 함수는 예외를 처리하지 않는다. 이렇게 정상 동작과 오류 처리 동작을 분리하면 코드를 이해하고 수정하기 훨씬 쉽다.
+
+### 오류 처리도 한 가지 작업이다.
+
+함수는 `한 가지 작업만`해야 한다. 다시. 함수는 한 가지 작업만 해야 한다. 오류 처리 역시 한 가지 작업에 속한다.
+따라서 오류를 처리하는 함수는 오류만 처리해야 한다. 함수에 키워드 try가 있다면
+함수는 try 문으로 시작해 catch/finally로 끝나야 한다는 말이다.
+
+### Error.java 의존성 자석
+
+오류 코드를 반환한다는 말은 곧 클래스든 열거형 변수든, 어디선가 오류 코드를 정의한다는 뜻이다.
+
+```java
+public enum Error {
+    OK,
+   INVALID,
+   NO_SUCH,
+   LOCKED,
+   OUT_OF_RESOURCES,
+   WAITING_FOR_EVENT;
+}
+```
+
+위와 같은 클래스는 의존성 자석이다. 다른 클래스에서 이 에러 enum을 import해 사용해야 하기 때문이다.
+Error enum이 변하면 Error enum을 사용하는 클래스 전부를 다시 컴파일하고 다시 배치해야 한다. 그래서 Error 클래스 변경이 어려워진다.
+
+이때, 오류 코드 대신 예외를 사용하면 새 예외는 Exception 클래스에서 파생된다. 따라서 재컴파일/재배치 없이도 새 예외 클래스를 추가할 수 있다.
+
+## 8. 반복하지 마라!
+
+증복은 소프트웨어에서 모든 악의 근원이다. 많은 원칙 및 기법이 중복을 없애거나 제어할 목적으로 나왔다.
+RDB에서 정규 형식은 자료에서 중복을 제거할 목적으로 만들어졌고, OOP에서는 부모 클래스에 중복되는 내용을 한데 모아버림으로써 중복을 없앤다.
+
+### 구조적 프로그래밍
+
+다익스트라의 구조적 프로그래밍 원칙에 따르면 모든 함수와 함수 내 모든 블록에 입구와 출구는 하나만 존재해야 한다.
+즉, 함수는 return 문이 하나여야 한다는 뜻이다. 루프 안에서 break나 continue를 써서는 안된다. 하지만 이는 함수가 클 경우에나 이득을 보지
+함수가 작다면 굳이 원칙처럼 따라야 할 정도는 아니다. 오히려 함수를 작게 만든다면 return, break, continue를 여러 차례 사용해도 괜찮을 수 있다.
+
+### 함수를 어떻게 짜죠?
+
+소프트웨어를 짜는 행위는 글짓기와 비슷하다. 논문이나 기사를 작성할 때는
+1. 먼저 생각을 기록한 후 읽기 좋게 다듬는다. 이때 초안은 대개 서투르고 어수선하다.
+2. 초안을 쓰고나면 원하는 대로 읽힐 때까지 말을 다듬고 문장을 고치고 문단을 정리한다.
+
+함수를 짤 때도 마찬가지다.
+1. 처음에는 길고 복잡하다. 들여쓰기 단계도 많고 중복 루프도 많다. 인수 목록도 아주 길다. 이름은 즉흥적이고 코드는 중복된다.
+2. 이 서투른 코드에 대해 빠짐없이 테스트하는 단위 테스트 케이스 역시 같이 만든다.
+3. 그 다음 코드를 다듬고, 함수를 만들고, 이름을 바꾸고, 중복을 제거한다. 메서드를 줄이고 순서를 바꾼다. 때로는 전체 클래스를 쪼개기도 한다. 그 와중에도 코드는 항상 단위 테스트를 통과하고 있어야 한다.
+
+핵심: 처음부터 완벽한 함수를 턱 하고 짜내지 않는다. 이게 가능한 사람은 없다고 보는 게 맞다.
+
+## 결론
+
+함수는 동사이고 클래스는 명사이다. 프로그래밍의 기술은 언제나 언어 설계의 기술이다.
+
+대가 프로그래머는 시스템을 프로그램이 아닌 이야기로 여긴다. 프로그래밍 언어라는 수단을 사용해
+더 풍부하고 표현력이 강한 언어를 만들어 이야기를 풀어간다. 시슽메에서 발생하는 모든 동작을 설명하는 함수 계층이
+바로 그 언어에 속한다.
+
+이 장은 함수를 잘 만드는 기교를 소개했다. 여기서 설명한 규칙을 따른다면
+
+- 길이가 짧고
+- 이름이 좋고
+- 체계가 잡힌
+함수가 나올 것이다. 하지만 
+
+> 진짜 목표는 시스템이라는 이야기를 풀어가는 데 있다는 사실을 명심하기 바란다.
+
+```java
+public class SetupTeardownIncluder {
+    private PageData pageData;
+    private boolean isSuite;
+    private WikiPage wikiPage;
+    private StringBuffer newPageContent;
+    private PageCrawler pageCrawler;
+    
+    public static String render(PageData pageData) throws Exception {
+        return render(pageData, false);
+    }
+    
+    public static String render(PageData pageData, boolean isSuite) throws Exception {
+        return new SetupTeardownIncluder(pageData).render(isSuite);
+    }
+
+    private SetupTeardownIncluder(PagedData pagedData) {
+        this.pageData = pagedData;
+        testPage = pagedData.getWikiPage();
+        pageCrawler = testPage.getPageCrawler();
+        newPageContent = new StringBuffer();
+    }
+    
+    private String render(boolean isSuite) throws Exception {
+        this.isSuite = isSuite;
+        if (isTestPage())
+            includeSetupAndTeardownPages();
+            return pageData.getHtml;
+    }
+    
+    private boolean isTestPage() throws Exception {
+        return pageData.hasAttribute("Test");
+    }
+    
+    private void includeSetupAndTeardownPages() throws Exception {
+        includeSetupPages();
+        includePageContent();
+        includeTeardownPages();
+        updatePageContent();
+    }
+    
+    private void includeSetupPages() throws Exception {
+        if (isSuite) {
+            includeSuiteSetupPage();
+        }
+        includeSetupPages();
+    }
+    
+    private void includeSuiteSetupPage() throws Exception {
+        include(SuiteResponder.SUITE_SETUP_NAME, "-setup");
+    }
+    
+    private void includeSetupPage() throws Exception {
+        include("SetUp", "-setup");
+    }
+    
+    private void includePageContent() throws Exception {
+        newPageContent.append(pageData.getContent());
+    }
+    
+    private void includeTeardownPages() throws Exception {
+        includeTeardownPages();
+        if (isSuite)
+            includeSuiteTeardownPage();
+    }
+    
+    private void includeTeardownPage() throws Exception {
+        include("TearDown", "-teardown");
+    }
+    
+    private void includeSuiteTeardownPage() throws Exception {
+        include(SuiteResponder.SUITE_TEARDOWN_NAME, "-teardown");
+    }
+    
+    private void updatePageContent() throws Exception {
+        include(SuiteResponder.SUITE_TEARDOWN_NAME, "-teardown");
+    }
+    
+    private void include(String pageName, String arg) throws Exception {
+        WikiPage inheritedPage = findInheritedPage(pageName);
+        if (inheritedPage != null) {
+            String pagePathName = getPathNameForPage(inheritedPage);
+            buildIncludeDirective(pagePathName, arg);
+        }
+    }
+    
+    private WikiPage findInheritedPage(String pageName) throws Exception {
+        return pageCrawlerImpl.getInheritedPage(pageName, testPage);
+    }
+    
+    private String getPathNameForPage(WikiPage page) throws Exception {
+        WikiPagePath pagePath = pageCrawler.getFullPath(page);
+        return PathParser.render(pagePath);
+    }
+
+    private void buildIncludeDirective(String pagePathName, String arg) {
+        newPageContent.append("\n!include")
+            .append(arg)
+            .append(" .")
+            .append(pagePathName)
+            .append("\n");
+    }
+}
+```
