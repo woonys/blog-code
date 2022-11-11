@@ -2,6 +2,7 @@ package jpabook.jpashop.domain;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -21,7 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders") // 테이블명을 orders -> SQL에서 ORDER BY의 ORDER와 헷갈림
 @Getter
 @Setter
 public class Order {
@@ -30,6 +31,7 @@ public class Order {
     @Column(name = "order_id")
     private Long id;
 
+    // 멤버와 관계 세팅: order 입장에서 다대일 -> 멤버 하나가 여러 주문을 할 수 있으니.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
@@ -44,7 +46,7 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatue status;
+    private OrderStatus status;
 
     public void setMember(Member member) {
         this.member = member;

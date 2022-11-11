@@ -20,14 +20,14 @@ public class Member {
 
     @Id
     @GeneratedValue
-    @Column(name = "member_id")
+    @Column(name = "member_id") // 요렇게 컬럼 어노테이션을 쓰면 해당 name으로 DB 테이블 내에서 일치하는 컬럼명을 찾아 매핑한다.
     private Long id;
 
     private String name;
 
-    @Embedded
-    private String address;
+    @Embedded // 내장 타입을 포함했다는 뜻
+    private Address address;
 
-    @OneToMany(mappedBy = "member")
+    @OneToMany(mappedBy = "member") // 얘 입장에서는 여러 주문을 하니까 일대다 & mappedBy -> FK를 orders 테이블에 있는 member에서 갖고 있으니 얘가 매핑되어지는 것임을 나타내기 위해
     private List<Order> orders = new ArrayList<>();
 }
