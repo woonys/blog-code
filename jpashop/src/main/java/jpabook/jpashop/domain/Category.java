@@ -25,5 +25,6 @@ public class Category {
     private String name;
 
     @ManyToMany
+    @JoinTable(name = "category_item")
     private List<Item> items = new ArrayList<>();
 }
