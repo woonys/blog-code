@@ -34,7 +34,7 @@ public abstract class Item {
     private int price;
     private int stockQuantity;
 
-    @ManyToMany
+    @ManyToMany(mappedBy = "items")
     @JoinTable(name = "category_item")
     private List<Category> categories = new ArrayList<>();
 }
