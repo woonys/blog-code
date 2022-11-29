@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="2cd26005-90e9-4bd6-b97c-97ac9a3de97b" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../ConstructorExample/src/main/java/com/example/constructorexample/practice/Rule.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ConstructorExample/src/main/java/com/example/constructorexample/practice/RuleService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ConstructorExample/src/main/java/com/example/constructorexample/practice/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../DomainModelExample/src/main/java/com/example/domainmodelexample/domainmodel/Domain/AccountWithLogic.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../DomainModelExample/src/main/java/com/example/domainmodelexample/domainmodel/service/AccountWithoutLogic.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../DomainModelExample/src/main/java/com/example/domainmodelexample/transactionscriptmodel/domain/AccountServiceWithoutLogic.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../DomainModelExample/src/main/java/com/example/domainmodelexample/transactionscriptmodel/service/AccountServiceWithLogic.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../CleanCodeStudy/src/main/java/com/example/cleancodestudy/Ch3/ReadMe.md" beforeDir="false" afterPath="$PROJECT_DIR$/../CleanCodeStudy/src/main/java/com/example/cleancodestudy/Ch3/ReadMe.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw.cmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/domainmodelsexample/DomainModelsExampleApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/domainmodelsexample/domainmodel/Domain/AccountWithLogic.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/domainmodelsexample/domainmodel/service/AccountWithoutLogic.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/domainmodelsexample/transactionscriptmodel/domain/AccountServiceWithoutLogic.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/domainmodelsexample/transactionscriptmodel/service/AccountServiceWithLogic.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/example/domainmodelsexample/DomainModelsExampleApplicationTests.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../HowLIKEQueryWorks/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../HowLIKEQueryWorks/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../LoanExample/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../LoanExample/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../LoanExample/src/test/java/com/example/loanexample/Example.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SpringMessagingWithRabbitmqExample/src/main/java/com/example/messagingrabbitmq/Runner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringMessagingWithRabbitmqExample/src/main/java/com/example/messagingrabbitmq/Runner.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2Hz8LkiELBBv9EHAWSobLPqIiQa" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "/Users/woony.kim/Desktop/woonys_github/blog-code/DomainModelsExample",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/java/com/example/domainmodelsexample" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/java/com/example/domainmodelsexample/transactionscriptmodel/service" />
+      <recent name="$PROJECT_DIR$/src/main/java/com/example/domainmodelsexample/transactionscriptmodel/domain" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2cd26005-90e9-4bd6-b97c-97ac9a3de97b" name="Changes" comment="" />
+      <created>1669276497856</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1669276497856</updated>
+      <workItem from="1669276499231" duration="693000" />
+      <workItem from="1669714986423" duration="214000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
