@@ -29,5 +29,5 @@ public class Member {
     private Address address;
 
     @OneToMany(mappedBy = "member") // 얘 입장에서는 여러 주문을 하니까 일대다 & mappedBy -> FK를 orders 테이블에 있는 member에서 갖고 있으니 얘가 매핑되어지는 것임을 나타내기 위해
-    private List<Order> orders = new ArrayList<>();
+    private List<Order> orders = new ArrayList<>(); // 근데 이거 생성자에서 초기화하면 안됨? -> 초기화 고민 안해도 됨. NPE 체크 안해도 되고. 바로 초기화하는 게 안전하기에.
 }
