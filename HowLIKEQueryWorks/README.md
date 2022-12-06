@@ -38,5 +38,8 @@ SELECT * FROM rules WHERE rule_category = '' AND rule_name LIKE '%keyword%';
 
 ## MySQL에서 LIKE 쿼리 구현 원리
 
-MySQL에서 LIKE 쿼리는 `B-Tree` 인덱스를 사용한다. B-Tree 인덱스는 데이터를 정렬된 상태로 저장하는 인덱스다. 
-따라서, LIKE 쿼리는 인덱스를 순차적으로 탐색하며 키워드를 포함하는 데이터를 찾는다.
+보통 MySQL에서 LIKE 쿼리를 날릴 때 `B-Tree` 인덱스를 사용한다고 알고 있다. 이는 엄밀히 말하면 다른데, 키워드가 속한 컬럼에 인덱스가 걸려있다면 B-Tree를 통해서, 그렇지 않다면 Turbo Boyer-Moore 알고리즘을 통해서 찾는다고 한다. [MySQL docs](https://dev.mysql.com/doc/refman/8.0/en/index-btree-hash.html)를 살펴보면 아래와 같다. 
+
+> A B-tree index can be used for column comparisons in expressions that use the =, >, >=, <, <=, or BETWEEN operators. The index also can be used for LIKE comparisons if the argument to LIKE is a constant string that does not start with a wildcard character.
+> 
+> If you use ... LIKE '%string%' and string is longer than three characters, MySQL uses the Turbo Boyer-Moore algorithm to initialize the pattern for the string and then uses this pattern to perform the search more quickly.
