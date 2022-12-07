@@ -36,10 +36,48 @@ SELECT * FROM rules WHERE rule_category = '' AND rule_name LIKE '%keyword%';
 
 여기서 궁금증 하나 더. MySQL 내에서 LIKE 쿼리는 어떻게 동작하는 걸까?
 
-## MySQL에서 LIKE 쿼리 구현 원리
+## MySQL에서 LIKE 쿼리 동작 원리: String Comparison Functions
 
-보통 MySQL에서 LIKE 쿼리를 날릴 때 `B-Tree` 인덱스를 사용한다고 알고 있다. 이는 엄밀히 말하면 다른데, 키워드가 속한 컬럼에 인덱스가 걸려있다면 B-Tree를 통해서, 그렇지 않다면 Turbo Boyer-Moore 알고리즘을 통해서 찾는다고 한다. [MySQL docs](https://dev.mysql.com/doc/refman/8.0/en/index-btree-hash.html)를 살펴보면 아래와 같다. 
+
+
+
+## 더 빨리 LIKE 쿼리를 날릴 수 있다고? B-Tree 인덱스 & Turbo Boyer-Moore 알고리즘
+
+보통 MySQL에서 LIKE 쿼리를 날릴 때 `B-Tree` 인덱스를 사용한다고 알고 있다. 이는 엄밀히 말하면 다른데, 
+
+- LIKE에 쓸 인자가 %로 시작하지 않는 상수 문자열인 경우에 한해서 인덱스를 LIKE 쿼리에 사용할 수 있기 때문이다.
+
+예시를 살펴보자.
+
+```sql
+SELECT * FROM tbl_name WHERE key_col LIKE 'Patrick%';
+SELECT * FROM tbl_name WHERE key_col LIKE 'Pat%_ck%';
+```
+
+위 두 쿼리는 아래의 두 가지 이유로 인해 B-Tree 인덱스를 사용할 수 있다.
+- %로 시작하지 않으며
+- 문자열 값 자체가 상수임
+
+반면 아래 쿼리는 B-Tree 인덱스를 사용할 수 없다.
+
+```sql
+SELECT * FROM tbl_name WHERE key_col LIKE '%Patrick%';
+SELECT * FROM tbl_name WHERE key_col LIKE other_col;
+```
+
+첫번째 구문의 경우, %로 시작하기 때문에 B-Tree 인덱스를 사용할 수 없다. 두번째 구문의 경우, other_col이 상수가 아니기 때문에 B-Tree 인덱스를 사용할 수 없다.
+
+이때, 첫번째 구문과 같이(우리가 쓰는 Containing과 동일) 키워드를 포함하는 검색을 시도할 경우, 키워드 길이가 세 글자 이하면 Turbo Boyer-Moore 알고리즘을 사용해 빠르게 검색할 수 있다고 한다.
+
+[MySQL docs](https://dev.mysql.com/doc/refman/8.0/en/index-btree-hash.html)를 살펴보면 아래와 같다. 
 
 > A B-tree index can be used for column comparisons in expressions that use the =, >, >=, <, <=, or BETWEEN operators. The index also can be used for LIKE comparisons if the argument to LIKE is a constant string that does not start with a wildcard character.
 > 
 > If you use ... LIKE '%string%' and string is longer than three characters, MySQL uses the Turbo Boyer-Moore algorithm to initialize the pattern for the string and then uses this pattern to perform the search more quickly.
+
+오..그렇구나!하고 끝내기에는 아쉽다. 각각의 동작 원리를 보다 디테일하게 파헤쳐보자.
+
+
+## B-Tree 인덱스란?
+
+## Turbo Boyer-Moore 알고리즘이란?
