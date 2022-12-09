@@ -38,7 +38,7 @@ SELECT * FROM rules WHERE rule_category = '' AND rule_name LIKE '%keyword%';
 
 ## MySQL에서 LIKE 쿼리 동작 원리: String Comparison Functions
 
-
+LIKE 쿼리의 경우 Simple pattern matching 방식으로 String을 비교해서 찾는다. 
 
 
 ## 더 빨리 LIKE 쿼리를 날릴 수 있다고? B-Tree 인덱스 & Turbo Boyer-Moore 알고리즘
