@@ -45,7 +45,7 @@ LIKE 쿼리의 경우 Simple pattern matching 방식으로 String을 비교해�
 
 보통 MySQL에서 LIKE 쿼리를 날릴 때 `B-Tree` 인덱스를 사용한다고 알고 있다. 이는 엄밀히 말하면 다른데, 
 
-- LIKE에 쓸 인자가 %로 시작하지 않는 상수 문자열인 경우에 한해서 인덱스를 LIKE 쿼리에 사용할 수 있기 때문이다.
+- LIKE에 쓸 인자가 **와일드카드 문자로 시작하지 않는 상수 문자열**인 경우에 한해서 인덱스를 LIKE 쿼리에 사용할 수 있기 때문이다. 여기서 와일드카드 문자란 %, _ 과 같은 특수문자를 일컫는데, 정확히는 텍스트를 검색하거나 비교 조건으로 사용할 때 알지 못하는 값에 대해 사용하는 특수문자를 말한다.
 
 예시를 살펴보자.
 
@@ -54,9 +54,9 @@ SELECT * FROM tbl_name WHERE key_col LIKE 'Patrick%';
 SELECT * FROM tbl_name WHERE key_col LIKE 'Pat%_ck%';
 ```
 
-위 두 쿼리는 아래의 두 가지 이유로 인해 B-Tree 인덱스를 사용할 수 있다.
-- %로 시작하지 않으며
-- 문자열 값 자체가 상수임
+위 두 쿼리는 각각 아래의 두 가지 이유로 인해 B-Tree 인덱스를 사용할 수 있다.
+- %(와일드카드 문자)로 시작하지 않으며
+- 문자열 값 자체가 상수임(문자의 개수가 정해져있음)
 
 반면 아래 쿼리는 B-Tree 인덱스를 사용할 수 없다.
 
@@ -65,7 +65,7 @@ SELECT * FROM tbl_name WHERE key_col LIKE '%Patrick%';
 SELECT * FROM tbl_name WHERE key_col LIKE other_col;
 ```
 
-첫번째 구문의 경우, %로 시작하기 때문에 B-Tree 인덱스를 사용할 수 없다. 두번째 구문의 경우, other_col이 상수가 아니기 때문에 B-Tree 인덱스를 사용할 수 없다.
+첫번째 구문의 경우, %로 시작하기 때문에 B-Tree 인덱스를 사용할 수 없다. 두번째는 other_col이 상수가 아니기 때문에 사용할 수 없다.
 
 이때, 첫번째 구문과 같이(우리가 쓰는 Containing과 동일) 키워드를 포함하는 검색을 시도할 경우, 키워드 길이가 세 글자 이하면 Turbo Boyer-Moore 알고리즘을 사용해 빠르게 검색할 수 있다고 한다.
 
