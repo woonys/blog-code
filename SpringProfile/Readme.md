@@ -56,11 +56,11 @@ spring:
 
 이렇듯, 하나의 기능이 개발되어 최종 서비스 단까지 나가려면 local → dev → (QA) → stage → prod 라는 각기 다른 개발환경을 거치게 되는데, 각 환경마다 필요한 객체 주입부터 여러 가지 설정이 달라진다. 따라서 어느 환경에 배포하느냐에 따라 아래 이미지와 같이 설정에 필요한 값을 그때그때 바꿔서 주입해줘야 한다. 아래 이미지를 보자. 개발 서버(Dev)에서 쓰기 위해 연결해놨던 MySQL DB의 서버 주소, S3 주소를 포함한 다양한 설정(인트로에서 언급한 property에 해당)과 실제 서비스(Prod) 상에 쓰이는 S3, DB 주소 등의 설정값은 다를 수밖에 없다.
 
-![Untitled.jpg](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a9ef60c8-f0fd-42db-b421-ffec2c406c3f/Untitled.jpg)
+![img_1.png](img_1.png)
 
 문제는 이를 사람이 한다면 귀찮기도 할 뿐더러, 혹여나 prod에 나가야 할 서버에 다른 설정값을 주입해버리는 불상사가 일어날 수도 있다는 점이다.
 
-![Untitled (1).jpg](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/897ab717-4673-402c-ba02-cee57a616faa/Untitled_(1).jpg)
+![img_2.png](img_2.png)
 
 그러면 자연스럽게 이런 질문이 등장한다.
 
@@ -73,7 +73,105 @@ Spring profile은 이러한 고민에서 나온 결과물이다.
 
 정리하면
 
-- 각기 다른 환경에 대해 주입할 Bean의 묶음이 profile이고
-- profile 안에 들어갈 외부 설정값의 모음이 properties이다.
+- **각기 다른 환경에 대해 주입할 Bean의 묶음**이 profile이고
+- **profile 안에 들어갈 외부 설정값의 모음**이 property이다.
+- 그리고 이는 위에서 언급했던 것처럼 .properties 혹은 .yml 형태의 파일로 구현한다.
 
-그러면 profile과 properties(yml)은 어떻게 설정할 수 있을까?
+이렇게 공부만 하고 끝났으면 좋으련만..**시련은 그렇게 쉽게 지나가지 않았다.**
+
+## Trouble Shooting: 분명히 설정값을 주입했는데 왜 integration test가 터지는 거지?
+
+배치를 돌릴 시간대인 cron 값을 YAML 형태의 profile로 변경하기 위해서는 아래와 같은 작업이 필요하다.
+
+- 실제 외부 설정값이 담긴 YAML (.yml) 파일을 생성한 뒤 해당값을 설정하고 (`batchjob.yml`)
+
+    ```java
+    // 보안상 실제 cron 값 및 profile 환경은 익명화함.
+    spring.profiles:  dev, local, localhost, stage, prod
+    
+    schedule:
+      batch-job:
+        loan1:
+          cron: 0 X X * * ?
+        loan2:
+          cron: 0 X X * * ?
+        loan3:
+          cron: 0 X X * * ?
+        loan4:
+          cron: 0 X X * * ?
+        loan5:
+          cron: 0 X X * * ?
+        loan6:
+          cron: 0 X X * * ?
+        loan7:
+          cron: 0 X X * * ?
+        loan8:
+          cron: 0 X X * * ?
+    ```
+
+- 해당 yml 파일을 profile에 주입하기 위한 Loader 객체를 생성하기 위해 `YamlResourceLoader` 상속받아 구현한다. (해당 static 클래스는 batchJob 관련 configuration에 추가했다.)
+
+    ```java
+    public static class BatchJobResourceLoader extends YamlResourceLoader {
+            public BatchJobResourceLoader() {super("batchjob.yml");}
+        }
+    ```
+
+
+왜 이런 식으로 할까? 앞서 profile이 각 배포 환경에 따라 외부 설정값을 각기 다르게 주입할 수 있도록 설정하는 역할이라고 말했다. 그런데 위의 예시와 같이 batchJob은 dev / stage / prod 모두 동일한 값을 주입하고 DB는 dev, stage, prod 각기 다른 db를 연결해야 하고 등등 저마다 다 다른 properties가 필요할텐데, 이를 파일 하나에 다 때려넣으면 너무 복잡하지 않겠나? 따라서 각 설정별로 다른 yml 파일을 생성하고 그 yml마다 YamlResource를 로딩하는 객체를 생성하여 모듈화하듯 구현하면 저마다 다른 설정에 대해 보다 쉽게 관리가 가능해질 것이다.
+
+무튼 이렇게 마무리를 하고 Integration 테스트를 돌렸더니..아래와 같이 에러가 터지는 게 아닌가?
+
+![img_3.png](img_3.png)
+
+로그를 확인해보니 아래와 같이 exception이 터졌더랬다. 설명을 보니 loan1에 들어가야 할 설정값이 주입이 되지 않았다는 것. 그런데 이상하다.. 우리는 분명 위에서 설정했는데?
+
+```java
+Exception encountered during context initialization - cancelling refresh attempt: 
+
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'batchJobScheduler' defined in class path resource [.../config/BatchJobConfiguration.class]: 
+
+Initialization of bean failed; nested exception is java.lang.IllegalStateException: 
+
+Encountered invalid @Scheduled method 'loan1': 
+
+Could not resolve placeholder 'schedule.batch-job.applyLoanOverdueCharges.cron' in value "${schedule.batch-job.loan1.cron}"
+```
+
+이를 해결하기 위해 별 이상한 짓거리를 다했다. @Value와 같은 설정값 주입 어노테이션을 달아주지 않아서 주입이 안된 것인가 하면서 별의별 어노테이션을 달지 않나..원인은 아주 심플했다. 아래 캡쳐를 보자. Integration test를 실행했을 때 나오는 로그이다.
+
+![img_4.png](img_4.png)
+
+설명을 보면 해당 profile은 embeddedtest로 설정한다고 나타나 있다. 그런데 우리가 작성한 profile을 보자. 어디에도 embeddedtest가 나와있지 않다. 그렇다. 해당 integration test의 profile은 embeddedtest로 active되는데, 정작 우리 profile에는 해당 환경에서 활성화되지 않기 때문에 설정값이 주입되지 않았던 것이다.
+
+```java
+// 보안상 실제 cron 값 및 profile 환경은 익명화함.
+spring.profiles:  dev, local, localhost, stage, prod
+
+schedule:
+  batch-job:
+    loan1:
+      cron: 0 X X * * ?
+    loan2:
+      cron: 0 X X * * ?
+    loan3:
+      cron: 0 X X * * ?
+    loan4:
+      cron: 0 X X * * ?
+    loan5:
+      cron: 0 X X * * ?
+    loan6:
+      cron: 0 X X * * ?
+    loan7:
+      cron: 0 X X * * ?
+    loan8:
+      cron: 0 X X * * ?
+```
+
+아하! 그러면 위의 profile에 embeddedtest만 적으면 되겠구나! 했지만, 역시 그리 만만하지 않았다. 해당 PR에 대해 아래와 같은 리뷰가 달렸다. 해당 profile을 굳이 여기저기 나눠서 다르게 설정할 필요가 없으니, 그냥 통으로 디폴트 설정하는 게 어떻겠냐는 것. (사실 해당 코멘트를 맨 처음 봤을 때는 무슨 뜻인지 1도 이해하지 못했다.)
+
+![img_5.png](img_5.png)
+
+아니, 해당 profile을 모든 환경에 동일하게 적용하려면(default) 어떻게 해야되지? [이 역시 답은 공식 문서에 있었다.(항상 공식 문서를 탐독하도록 하자!)](https://docs.spring.io/spring-boot/docs/2.2.2.RELEASE/reference/pdf/spring-boot-reference.pdf) 아래 캡쳐를 보자. 스프링부트 doc에 있는 profile 관련 내용이다. 설명에도 나와있듯, default 프로파일로 설정하려면 그 어떤 환경에 대해서도 명시적으로 적지 않으면 된다. 즉, 위의 spring.profiles:  dev, local, localhost, stage, prod 를 지우면 되는 것. 아주 간단했다.
+
+![img_6.png](img_6.png)
