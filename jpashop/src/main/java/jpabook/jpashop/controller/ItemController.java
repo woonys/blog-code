@@ -62,17 +62,36 @@ public class ItemController {
     }
 
     @PostMapping("items/{itemId}/edit")
-    public String updateItem(@PathVariable String itemId, @ModelAttribute("form") BookForm form) {
+    public String updateItem(@PathVariable Long itemId, @ModelAttribute("form") BookForm form) {
+
+        /**
+         * 아래의 Book 객체는 준영속 엔티티.
+         * 준영속 엔티티: 영속성 컨텍스트가 더이상 관리하지 않는 엔티티를 말함.
+         * 아래의 Book 객체는 새로 만든 것 같지만 빈 Book 객체에 이미 DB에 저장되어 있는 애를 입힌 것임.
+         * 그러니까 식별자(id)가 존재. 이렇게 임의로 만들어낸 엔티티도 기존 식별자를 갖고 있다면 준영속 엔티티로
+         * 봐야 한다.
+         *
+         * 준영속 엔티티를 수정하는 2가지 방법:
+         * 1) 변경 감지 기능 사용
+         * 2) 병합(Merge) 사용 -> 세터 쓰고 마지막에 save() 던져서 merge() 던지면 병합. 근데 이 방식은 좋지 않다.
+         */
+
         Book book = new Book();
+        /**
+         * 병합: 준영속 상태 엔티티를 영속 상태로 변경할 때 사용하는 기능
+         */
+//        book.setId(form.getId());
+//        book.setName(form.getName());
+//        book.setPrice(form.getPrice());
+//        book.setStockQuantity(form.getStockQuantity());
+//        book.setAuthor(form.getAuthor());
+//        book.setIsbn(form.getIsbn());
+//        itemService.saveItem(book);
 
-        book.setId(form.getId());
-        book.setName(form.getName());
-        book.setPrice(form.getPrice());
-        book.setStockQuantity(form.getStockQuantity());
-        book.setAuthor(form.getAuthor());
-        book.setIsbn(form.getIsbn());
-
-        itemService.saveItem(book);
+        /**
+         * 컨트롤러에서 어설프게 엔티티로 받지 말고 DTO를 받아라!
+         */
+        itemService.updateItem(itemId, form.getName(), form.getPrice(), form.getStockQuantity());
         return "redirect:/items";
     }
 }
