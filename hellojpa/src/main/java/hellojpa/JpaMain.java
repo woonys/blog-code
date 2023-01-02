@@ -19,28 +19,13 @@ public class JpaMain {
         // code
         try {
 
-            // 저장
-//            Member member = new Member();
-//            member.setId(1L);
-//            member.setName("helloA");
-//            em.persist(member);
-            // 조회
-//            Member findMember = em.find(Member.class, 2L);// 멤버 찾아올 수 있음
-//            System.out.println("findMember.id = " + findMember.getId());
-//            System.out.println("findMember.name = " + findMember.getName());
+            Member member1 = new Member(150L, "A");
+            Member member2 = new Member(160L, "B");
 
-            // 수정
-//            Member findMember = em.find(Member.class, 2L);
-//            findMember.setName("helloB");
-            // em.persist() 없어도 된다 -> JPA가 알아서 변경 감지하고 저장하기 때문
+            em.persist(member1);
+            em.persist(member2);
 
-            // JPQL: 객체지향 SQL! -> 테이블이 아닌 객체를 대상으로 검색하는 객체 지향 쿼리
-            List<Member> result = em.createQuery("select m from Member as m", Member.class)
-                                    .getResultList();
-            for (Member member : result) {
-                System.out.println("member.getName() = " + member.getName());
-                
-            }
+            System.out.println("==========");
 
             tx.commit();
         } catch (Exception e) {
