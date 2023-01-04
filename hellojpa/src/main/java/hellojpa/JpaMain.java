@@ -18,15 +18,19 @@ public class JpaMain {
         tx.begin(); // 그냥 변경하면 안됨 -> JPA에서 수정 작업은 반드시 트랜잭션 안에서.
         // code
         try {
+            // 영속
 
-            Member member1 = new Member(150L, "A");
-            Member member2 = new Member(160L, "B");
+            Member member = new Member(200L, "member200");
+            em.persist(member);
 
-            em.persist(member1);
-            em.persist(member2);
+            em.flush(); // flush를 먼저 호출하면 아래 라인보다 Insert 문이 먼저 날아간다.
+            /*
+            플러시 - 영속성 컨텍스트를 비우지 않는다.
+            영속성 컨텍스트 변경 내용을 데이터베이스에 동기화하는 것.
+            트랜잭션이라는 작업 단위가 더 중요하다. -> 커밋 직전에만 동기화하면 된다.
+             */
 
-            System.out.println("==========");
-
+            System.out.println("=====================");
             tx.commit();
         } catch (Exception e) {
             tx.rollback();
