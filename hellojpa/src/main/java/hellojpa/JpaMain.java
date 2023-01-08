@@ -1,11 +1,12 @@
 package hellojpa;
 
-import java.util.List;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+
+import hellojpa.teamexample.Member;
+import hellojpa.teamexample.Team;
 
 public class JpaMain {
     public static void main(String[] args) {
@@ -20,17 +21,17 @@ public class JpaMain {
         try {
             // 영속
 
+            Team team = new Team();
+            team.setName("TeamA");
+            em.persist(team);
             Member member = new Member();
+            member.setUserName("member1");
             em.persist(member);
 
-            em.flush(); // flush를 먼저 호출하면 아래 라인보다 Insert 문이 먼저 날아간다.
-            /*
-            플러시 - 영속성 컨텍스트를 비우지 않는다.
-            영속성 컨텍스트 변경 내용을 데이터베이스에 동기화하는 것.
-            트랜잭션이라는 작업 단위가 더 중요하다. -> 커밋 직전에만 동기화하면 된다.
-            */
+            Member findMember = em.find(Member.class, member.getId());
 
-            System.out.println("=====================");
+            Team findTeam = findMember.getTeam();
+            System.out.println("findTeam.Name = " + findTeam.getName());
             tx.commit();
         } catch (Exception e) {
             tx.rollback();

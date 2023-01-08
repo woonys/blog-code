@@ -1,2 +1,5 @@
-package hellojpa.domain;public class OrderStatus {
+package hellojpa.domain;
+
+public enum OrderStatus {
+    ORDER, CANCEL
 }
