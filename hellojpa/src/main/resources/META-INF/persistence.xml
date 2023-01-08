@@ -14,7 +14,7 @@
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.format_sql" value="true"/>
       <property name="hibernate.use_sql_comments" value="true"/>
-<!--      <property name="hibernate.hbm2ddl.auto" value="create" /> -> 운영 장비에는 절대 이걸 사용하면 안된다!-->
+      <property name="hibernate.hbm2ddl.auto" value="create" />
     </properties>
   </persistence-unit>
 </persistence>

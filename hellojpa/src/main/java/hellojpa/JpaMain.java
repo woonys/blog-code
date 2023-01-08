@@ -20,7 +20,7 @@ public class JpaMain {
         try {
             // 영속
 
-            Member member = new Member(200L, "member200");
+            Member member = new Member();
             em.persist(member);
 
             em.flush(); // flush를 먼저 호출하면 아래 라인보다 Insert 문이 먼저 날아간다.
