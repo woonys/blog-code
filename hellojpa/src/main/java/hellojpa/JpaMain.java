@@ -21,17 +21,15 @@ public class JpaMain {
         try {
             // 영속
 
-            Team team = new Team();
-            team.setName("TeamA");
-            em.persist(team);
             Member member = new Member();
             member.setUserName("member1");
+
             em.persist(member);
 
-            Member findMember = em.find(Member.class, member.getId());
 
-            Team findTeam = findMember.getTeam();
-            System.out.println("findTeam.Name = " + findTeam.getName());
+            Member findMember1 = em.find(Member.class, member.getId());
+            Member findMember2 = em.find(Member.class, member.getId());
+            System.out.println("result = " + (findMember1 == findMember2));
             tx.commit();
         } catch (Exception e) {
             tx.rollback();

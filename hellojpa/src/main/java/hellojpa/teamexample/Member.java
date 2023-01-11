@@ -14,9 +14,9 @@ public class Member {
     @Column(name = "MEMBER_ID")
     private Long id;
 
-    @ManyToOne // Member 입장에서 N(Many)이고 Team 입장에서 1(One)이니!
-    @JoinColumn(name = "TEAM_ID")
-    private Team team;
+//    @ManyToOne // Member 입장에서 N(Many)이고 Team 입장에서 1(One)이니!
+//    @JoinColumn(name = "TEAM_ID")
+//    private Team team;
 
     public Long getId() {
         return id;
@@ -26,13 +26,6 @@ public class Member {
         this.id = id;
     }
 
-    public Team getTeam() {
-        return team;
-    }
-
-    public void setTeam(Team team) {
-        this.team = team;
-    }
 
     public String getUserName() {
         return userName;
