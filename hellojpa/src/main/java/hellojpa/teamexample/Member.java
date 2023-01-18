@@ -1,11 +1,6 @@
 package hellojpa.teamexample;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 @Entity
 public class Member {
@@ -17,6 +12,10 @@ public class Member {
 //    @ManyToOne // Member 입장에서 N(Many)이고 Team 입장에서 1(One)이니!
 //    @JoinColumn(name = "TEAM_ID")
 //    private Team team;
+
+    @OneToOne
+    @JoinColumn(name = "LOCKER_ID") // JoinColumn은 반드시 있어야 됨!
+    private Locker locker;
 
     public Long getId() {
         return id;
