@@ -22,6 +22,11 @@ public class Item {
 
     @Column(name = "price")
     private int price;
+    @Column(name = "stock_quantity")
+    private int stockQuantity;
+
+    @OneToMany(mappedBy = "item")
+    private List<OrderItem> orderItem = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -54,13 +59,5 @@ public class Item {
     public void setStockQuantity(int stockQuantity) {
         this.stockQuantity = stockQuantity;
     }
-
-    @Column(name = "stock_quantity")
-    private int stockQuantity;
-
-
-//    @OneToMany(mappedBy = "item")
-//    private List<OrderItem> orderItem = new ArrayList<>();
-
 
 }
