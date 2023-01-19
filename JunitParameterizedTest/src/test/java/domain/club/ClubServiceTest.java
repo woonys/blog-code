@@ -39,4 +39,18 @@ class ClubServiceTest {
         assertEquals(false, result);
     }
 
+    @ParameterizedTest
+    @EnumSource(value = Grade.class, names = {"NO_ANSWER", "BRONZE"})
+    public void cannotEnterClub_ifUserIsUnderBronze(Grade grade) {
+        //given
+        user.setGender(Gender.MALE);
+        user.setAge(20);
+        user.setGrade(grade);
+
+        //when
+        boolean result = clubService.isEnterClub(user);
+
+        //then
+        assertEquals(false, result);
+    }
 }
