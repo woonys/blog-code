@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="domain.club.ClubServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2023-01-19T13:21:12" hostname="BH-L168.local" time="0.017">
+<testsuite name="domain.club.ClubServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2023-01-24T16:19:52" hostname="BH-L168.local" time="0.017">
   <properties/>
   <testcase name="[1] NO_ANSWER" classname="domain.club.ClubServiceTest" time="0.014"/>
   <testcase name="[2] BRONZE" classname="domain.club.ClubServiceTest" time="0.001"/>
