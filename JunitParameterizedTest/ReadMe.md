@@ -43,3 +43,69 @@ dependencies {
 
 ![img.png](img.png)
 
+위의 에러를 맞닥뜨리지 않게 조심하고, 곧바로 본론으로 넘어가보도록 하자.
+
+## 예제: WOONY 클럽
+
+해당 예제를 어떤 식으로 만들면 좋을지 고심하다가 뜬금없이 클럽이 떠올랐다. 우리는 지금부터 메타버스 클럽을 만들 예정이다.
+
+이 클럽에는 아래와 같은 비즈니스 요구사항이 있다.
+
+- 클럽
+  - 클럽은 라운지와 룸으로 구성되어 있다.
+  - 클럽에는 특정 조건을 만족한 사람만 입장 가능하다.
+    - 클럽은 성인 이상만 입장 가능하다.
+    - 만약 고객이 남자일 때, 해당 남자 등급이 브론즈 이하면 유저는 입장할 수 없다.(뺀찌)
+  - 클럽 룸은 VIP 등급의 남성 혹은 골드 등급 이상의 여성만 입장 가능하다.
+- 고객
+  - 유저는 이름, 나이, 성별, 등급을 갖는다.
+  - 유저는 클럽에 입장할 때 성인 여부를 체크받는다.
+  - 유저는 클럽에 입장할 때 등급을 체크받는다.
+- 등급
+  - 등급은 NO_ANSWER, BRONZE, SILVER, GOLD, VIP 총 5개가 있으며, 순서가 뒤일수록 등급이 높다.
+
+모든 코드는 깃허브에 올려뒀으니 여기서 살펴보기로 하고, 곧바로 테스트로 넘어가보자.
+
+## ClubServiceTest: 20살 이하는 다 걸러라
+
+20세(만 18세) 이상만 입장 가능한 클럽에 16, 17, 18세의 민짜들이 와서 들여보내달라 한다고 해보자. 테스트 코드는 아래와 같다.
+
+    
+    }
+```java
+public void cannotEnterClub_ifUserIsAge16() {
+        //given
+        int age = 16;
+        user.setGender(Gender.MALE);
+        user.setAge(age);
+        user.setGrade(Grade.SILVER);
+
+        //when
+        boolean result = clubService.isEnterClub(user);
+
+        //then
+        assertEquals(false, result);
+```
+
+문제는 age를 제외하면 전부 동일한 코드인데 17세, 18세인 테스트 케이스에 대해 일일이 테스트 메서드를 추가해야된다는 점이다. 딱 봐도 비효율적이지 않나.
+
+이때 우리가 쓸 수 있는 게 바로 JUnit의 `@ParameterizedTest`이다. 적용한 코드를 바로 보자.
+
+```java
+@ParameterizedTest
+@ValueSource(ints = {16, 17, 18})
+public void cannotEnterClub_ifUserIsNotAdult(int age) {
+        //given
+        user.setGender(Gender.MALE);
+        user.setAge(age);
+        user.setGrade(Grade.SILVER);
+
+        //when
+        boolean result = clubService.isEnterClub(user);
+
+        //then
+        assertEquals(false, result);
+        }
+```
+
+위와 같이 테스트 메소드 위에 @ParameterizedTest 어노테이션을 추가한 뒤, 넣어주고자 하는 Value에 대한 Source를 @ValueSource()에 추가한다. 이때, 우리가 넣으려는 값은 int 타입이니 ints = {}에 값을 넣어주면 된다.
