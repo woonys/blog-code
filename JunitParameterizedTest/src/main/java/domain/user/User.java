@@ -1,9 +1,10 @@
 package domain.user;
 
 import domain.club.Grade;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter @Setter
 public class User {
 
     private static int AGE_OF_MAJORITY = 18;
