@@ -51,4 +51,47 @@
           - Usable at large scale, in production, today.
           - No dependency on the rest of the Docker platform: just the container runtime and nothing else.
 
-## macOS용 도커 엔진 설치
+## macOS용 도커 엔진 설치 → Docker Desktop 설치하면 됨!
+
+## 2.4 도커 확인
+
+### 2.4.1 도커 컨테이너 서비스
+
+- `Hello world` 찍기 with busybox
+  ![img_5.png](img_5.png)
+  - busybox: 도커에서 제공하는 busybox는 하나의 실행 파일로 여러 유닉스/리눅스 유틸리티를 제공하는 소프트웨어
+  > docker ps -a 명령은 실행된 모든 (실행 중인, 실행 종료된) 컨테이너 정보를 제공한다. 리눅스 명령어인 ps(process status)와 같은 맥락으로 사용된다. 결국, 도커 컨테이너는 ‘프로세스 가상화’라는 의미를 되새긴다.
+  > busybox를 실행하면 sh(셸)을 이용해 지정한 명령을 실행하는데, 처음 실행한 명령에서는 busybox 뒤에 명령을 기재하지 않았기 때문에 실행되자마자 바로 종료된다.
+  > 도커 컨테이너는 우분투 리눅스 운영체제를 이용한다. 도커 가상화는 호스트의 커널을 공유해서 사용하기 때문. 작은 용량이 가능한 이유는 도커 컨테이너가 호스트 커널을 공유해서 재사용하고(따로 OS가 필요 X) 가동에 필요한 도구만 일부 탑재한 ‘격리된 경량의 리눅스 프로세스’기 때문이다.
+  ![img_6.png](img_6.png)
+
+- 출력된 ‘Hello World’는 어디서 출력되었을까?
+    - 호스트로 사용 중인 Ubuntu?
+    - Busybox 컨테이너 내부? ( ✅  ) ⇒  호스트가 아닌 컨테이너 서비스를 통해 명령 수행!
+- Busybox 실행 과정
+    - `docker pull busybox`: 도커 허브 레지스트리에서 제공하는 busybox 이미지 다운로드
+    - `docker ps -a` : 실행 중이거나 실행 종료된 모든 컨테이너 정보 제공
+    - `docker images`: 이미지를 조회 → 앞서 다운로드한 busybox 이미지를 확인
+    - `docker run busybox echo ‘Hello World’` : 셸에 echo 명령을 이용해 ‘Hello World’ 출력
+  ![img_7.png](img_7.png)
+
+### 2.4.2 도커 정보 확인
+
+- 설치된 도커 엔진은 클라이언트와 서버로 구분
+- 클라이언트: 도커 명령을 받고 결과를 출력
+- 서버: 도커 엔진(도커 데몬)을 이용해 컨테이너 시작, 운영, 정지 등을 담당
+- 클라-서버 상호 실행 원리
+![img_8.png](img_8.png)
+
+  1. 클라는 도커 명령을 수행하는 명령줄 제공
+  2. 수행된 도커 명령은 서버의 도커 데몬으로 전달
+  3. 도커 데몬은 docker.socket이 보유한 도커 API를 이용해 컨테이너 생성
+  4. 수행된 컨테이너에 포함된 서비스 결과를 클라에 전달
+  
+- `docker info`: 시스템에 설치된 도커 구성 정보 확인 가능
+  ![img_9.png](img_9.png)
+  - 커널 정보, 현재 컨테이너 수 및 이미지 수 출력
+  - 사용 중인 스토리지 드라이버에 따른 풀 이름
+  - 데이터 파일, 메타 데이터 파일, 사용된 데이터 공간, 총 데이터 공간, …
+- `docker system df`: 도커 시스템이 사용하는 디스크 사용량에 대한 현재 상태 조회
+  ![img_10.png](img_10.png)
