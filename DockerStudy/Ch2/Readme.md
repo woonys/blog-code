@@ -95,3 +95,31 @@
   - 데이터 파일, 메타 데이터 파일, 사용된 데이터 공간, 총 데이터 공간, …
 - `docker system df`: 도커 시스템이 사용하는 디스크 사용량에 대한 현재 상태 조회
   ![img_10.png](img_10.png)
+  - 아래에 대한 정보를 갖고 있음.
+      - 이미지
+      - 컨테이너
+      - 로컬 볼륨
+      - 빌드 캐시
+  - RECLAIMABLE: 사용 중이지 않은 이미지를 삭제함으로써 확보할 수 있는 공간을 뜻함
+
+- `docker system prune`: 회수 가능한 공간 확보(위의 빌드 캐시를 지움으로써 21.69 GB 확보)
+  ![img_11.png](img_11.png)
+  ![img_12.png](img_12.png)
+
+- `docker system events`
+    - 준비물: 터미널 창 2개 띄운다
+      - 터미널 1: `docker system events` 입력
+        ![img_13.png](img_13.png)
+        - 이벤트 로그 기록되는 것을 확인 가능
+          ![img_14.png](img_14.png)
+        - webapp 컨테이너 종료 이벤트 로그 확인 가능
+          ![img_15.png](img_15.png)
+      - 터미널 2: `docker run -itd -p 80:80 —name=webapp nginx` 입력
+        ![img_16.png](img_16.png)
+        - 터미널 2: `docker stop webapp` 입력
+
+- 이벤트 옵션 필터(`—-filter`)를 걸면 원하는 정보만 추출해서 볼 수 있음.
+    - `docker system events --filter ‘type=image’`
+      ![img_17.png](img_17.png)
+
+- 도커 데몬 디버깅: 도커 데몬 관련 문제는 도커 데몬 로그를 확인해 원인 파악한다.
