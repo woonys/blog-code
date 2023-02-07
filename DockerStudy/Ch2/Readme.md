@@ -122,4 +122,13 @@
     - `docker system events --filter ‘type=image’`
       ![img_17.png](img_17.png)
 
-- 도커 데몬 디버깅: 도커 데몬 관련 문제는 도커 데몬 로그를 확인해 원인 파악한다.
+- 도커 데몬 디버깅: 도커 데몬 관련 문제는 도커 데몬 로그를 확인해 원인 파악한다.([Ref page](https://docs.docker.com/config/daemon/logs/)) → 책 내용 outdated
+
+- macOS (`dockerd` logs) 위치: `~/Library/Containers/com.docker.docker/Data/log/vm/dockerd.log`
+
+
+> 💡 To view the `dockerd` logs on macOS, open a terminal Window, and use the `tail` command with the `-f` flag to “follow” the logs. Logs will be printed until you terminate the command using `CTRL+c`:
+
+```bash
+$ tail -f ~/Library/Containers/com.docker.docker/Data/log/vm/dockerd.log
+```
