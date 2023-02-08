@@ -24,3 +24,15 @@ WHERE request.created_at < orders.latest_order_created_at
 AND u.user_status_cd = 10
 ORDER BY latest_order_created_at DESC
 ```
+
+### 서브쿼리에서 최신 날짜 하나만 빼오기
+
+```sql
+SELECT *
+FROM (
+-- orderBy가 아닌 MAX()를 이용한다
+SELECT user_id, MAX(created_at) as latest_order_created_at
+FROM a.order_summary
+GROUP BY user_id
+) orders
+```
