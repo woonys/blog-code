@@ -13,6 +13,7 @@ import jpabook.jpashop.domain.item.Item;
 import jpabook.jpashop.repository.ItemRepository;
 import jpabook.jpashop.repository.MemberRepository;
 import jpabook.jpashop.repository.OrderRepository;
+import jpabook.jpashop.repository.OrderSearch;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -56,6 +57,10 @@ public class OrderService {
         // 취소
         order.cancel(); // JPA를 사용하면 엔티티를 변경했을 때 트랜잭션이 끝나는 시점에 변경 감지(dirty checking)가 되어 자동으로 update 쿼리가 날라간다.
         // mybatis를 사용하면 update 쿼리를 직접 날려줘야 하는 것과 달리 JPA는 위와 같은 장점이 있다!
+    }
+
+    public List<Order> findOrders(OrderSearch orderSearch) {
+        return orderRepository.findAllByString(orderSearch);
     }
 
     // 검색

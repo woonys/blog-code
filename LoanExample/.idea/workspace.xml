@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5e052204-ea47-4e3d-a530-905c58630a5b" name="Changes" comment="" />
+    <list default="true" id="5e052204-ea47-4e3d-a530-905c58630a5b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SpringMessagingWithRabbitmqExample/src/main/java/com/example/messagingrabbitmq/Runner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringMessagingWithRabbitmqExample/src/main/java/com/example/messagingrabbitmq/Runner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../jpashop/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../jpashop/build.gradle" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -40,7 +44,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/woony.kim/Desktop/woonys_github/DIExample/LoanExample&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/woony.kim/Desktop/woonys_github/blog-code/LoanExample&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -101,6 +105,8 @@
       <workItem from="1663934542711" duration="486000" />
       <workItem from="1664030926314" duration="7066000" />
       <workItem from="1664534488233" duration="25000" />
+      <workItem from="1666011816522" duration="2945000" />
+      <workItem from="1666699526187" duration="1174000" />
     </task>
     <servers />
   </component>

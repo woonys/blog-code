@@ -22,4 +22,6 @@ public class Club {
         room.add(user);
         System.out.println("룸에 입장하셨습니다.");
     }
+
+    StringBuilder builder = new StringBuilder();
 }

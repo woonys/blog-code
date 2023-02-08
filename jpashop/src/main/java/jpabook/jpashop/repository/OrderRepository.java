@@ -1,6 +1,5 @@
 package jpabook.jpashop.repository;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,35 +32,26 @@ public class OrderRepository {
         return em.find(Order.class, id);
     }
 
-    public List<Order> findAllByString(OrderSearch orderSearch) { // 동적쿼리를 JPQL 문자열로 생성하는 방식 -> 안티패턴
-        // 동적쿼리를 짜려면?
-        List<Order> resultList = em.createQuery("select o from Order o join o.member m" +
-                                                " where o.status = :status " +
-                                                " and m.name like :name", Order.class)
-                                   .setParameter("status", orderSearch.getOrderStatus())
-                                   .setParameter("name", orderSearch.getMemberName())
-                                   .setMaxResults(1000) // 최대 1000 건
-                                   .getResultList();// JPQL 작성
-
-        /* 동적 쿼리의 안 좋은 예시
+    // 동적쿼리를 JPQL 문자열로 생성하는 방식 -> 안티패턴
+    /* 동적 쿼리의 안 좋은 예시
         - 문제 1: 이렇게 JPQL을 문자로 생성하면 번거로움
         - 문제 2 : 어디서 버그가 나타나는지 찾기가 매우 힘들다... 반면 MyBatis: 동적 쿼리를 생성하기 매우 좋다는 이점이 있다?
          */
-        String jpql = "select o from Order o join o.member m";
+    public List<Order> findAllByString(OrderSearch orderSearch) {
+        //language=JPAQL
+        String jpql = "select o From Order o join o.member m";
         boolean isFirstCondition = true;
-
-        // 주문 상태 검색
+//주문 상태 검색
         if (orderSearch.getOrderStatus() != null) {
             if (isFirstCondition) {
-                jpql += "where";
+                jpql += " where";
                 isFirstCondition = false;
             } else {
                 jpql += " and";
             }
             jpql += " o.status = :status";
         }
-
-        // 회원 이름 검색
+//회원 이름 검색
         if (StringUtils.hasText(orderSearch.getMemberName())) {
             if (isFirstCondition) {
                 jpql += " where";
@@ -69,23 +59,18 @@ public class OrderRepository {
             } else {
                 jpql += " and";
             }
-            jpql += " and";
+            jpql += " m.name like :name";
         }
-        jpql += " m.name like :name";
 
-        TypedQuery<Order> query = em.createQuery(jpql, Order.class)
-                                    .setMaxResults(1000);
-
+        TypedQuery<Order> query = em.createQuery(jpql, Order.class).setMaxResults(1000); //최대 1000건
         if (orderSearch.getOrderStatus() != null) {
             query = query.setParameter("status", orderSearch.getOrderStatus());
         }
         if (StringUtils.hasText(orderSearch.getMemberName())) {
             query = query.setParameter("name", orderSearch.getMemberName());
         }
-
         return query.getResultList();
     }
-
     /**
      * JPA criteria로 동적 쿼리 -> 역시 별로 좋은 방식은 아님..
      * 방식: JPQL을 자바 코드로 작성할 수 있도록 JPA에서 제공하는 표준 방. 동적 쿼리를 작성할 때 큰 도움.

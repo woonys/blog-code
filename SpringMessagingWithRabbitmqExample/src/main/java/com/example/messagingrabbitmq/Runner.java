@@ -18,10 +18,15 @@ public class Runner implements CommandLineRunner {
     }
 
     @Override
+    public void run(String... args){
+        try {
+            System.out.println("Sending message...");
+            rabbitTemplate.convertAndSend(MessagingRabbitApplication.topicExchangeName, "foo.bar.baz", "Hello from RabbitMQ!");
+            Thread.sleep(10000);
+            receiver.getLatch().await(1, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-    public void run(String... args) throws Exception {
-        System.out.println("Sending message...");
-        rabbitTemplate.convertAndSend(MessagingRabbitApplication.topicExchangeName, "foo.bar.baz", "Hello from RabbitMQ!");
-        receiver.getLatch().await(10000, TimeUnit.MILLISECONDS);
     }
 }
