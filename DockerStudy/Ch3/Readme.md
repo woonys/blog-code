@@ -160,4 +160,110 @@
 
       ![img_8.png](img_8.png)
 
-    -
+> docker run = docker [pull] + create + start + [command]
+
+- docker run 특징:
+    - 호스트 서버에 이미지가 없더라도 로컬에 존재하지 않는 이미지를 도커 허브에서 자동 다운로드(`pull`)
+    - 마지막에 해당 컨테이너에 실행할 명령 입력 시 컨테이너 동작과 함께 처리
+- **docker run에서 자주 사용하는 옵션**
+    - `-i` : 대화식 모드(interactive mode) 열기: Docker가 컨테이너의 표준입력과 사용자 터미널을 붙여주는(연결해주는) 옵션.
+        - 이걸 쓰면 우리 터미널에서 커맨드를 입력했을 때 해당 커맨드를 컨테이너 내부 CLI로 전달해주고 거기서 출력된 결과물을 우리 터미널로 끄집어내서 보여준다.
+        - 하지만 `-i` 옵션만 쓰게 되면 컨테이너 내부 셸과는 상호작용할 수 없음.
+       ![img_9.png](img_9.png)
+      - 우리가 인풋은 넣고 싶은데 해당 셸 프롬프트의 아웃풋을 보고 싶지는 않을 때 이것을 쓰면 된다.
+    - `-t` : tty(컨테이너 내부 터미널을 뜻함)
+        - t 옵션만 쓰면 해당 컨테이너에 터미널을 할당해주지만 우리 터미널과 컨테이너의 표준 입력 사이가 붙어있지 않음. 즉, 해당 컨테이너의 커맨드 라인과 상호작용할 수 없음.
+        - 즉, 터미널은 떠 있지만, 해당 터미널을 통해 명령어를 전달할 수도 없고 마찬가지로 어떤 결과물도 확인할 수 없다.
+        - ![img_10.png](img_10.png)
+    - `-it`: 해당 컨테이너에 터미널을 할당하고 & 우리 터미널과 그쪽 터미널 사이를 연결(attach)함으로써 명령어 전달 및 아웃풋 출력 가능
+        ![img_11.png](img_11.png)
+    - `-d` : 백그라운드에서 컨테이너 실행 후 컨테이너 id 등록
+      - 일반적으로 docker run에 명령어 따로 붙이지 않고 -d 옵션만 붙이면 실행할 게 없어서 해당 프로그램 종료된다.
+      - `docker run -d --name=python_test -p 8900:8900 python` 이후 `docker ps` 로 현재 실행 중인 프로세스 확인 → python 종료되어 있음
+      ![img_12.png](img_12.png)
+    - `-itd` : container 백그라운드에서 실행한 뒤 표준 입력 명령 수행 → input 받을 수 있는 상태로 계속 대기(컨테이너 종료되지 않음)
+      ![img_13.png](img_13.png)
+      ![img_14.png](img_14.png)
+
+### 실습 3-1: SQL 테스트를 위한 개발 팀의 데이터베이스 요청으로 MySQL 5.7 컨테이너 실행
+
+- 1. `docker pull --platform linux/amd64 mysql:5.7`
+    - 어라? 근데 우리는 맥북 쓰고 있으니까 arm64 버전으로 받아야 하는 거 아님?
+        1. arm64용 5.7버전이 없다… → [도커 허브 내 official image에는 8버전만 존재](https://hub.docker.com/_/mysql)
+        2. 하지만 우리에게는 QEMU가 있다! → [공식 문서 참조](https://www.notion.so/Ch-3-fec8591268d340519b152d095068fbe2)
+
+           You can build multi-platform images using three different strategies that are supported by Buildx and Dockerfiles:
+
+            1. **Using the QEMU emulation support in the kernel(Docker desktop을 쓸 경우 여기에 해당)**
+            2. Building on multiple native nodes using the same builder instance
+            3. Using a stage in Dockerfile to cross-compile to different architectures
+
+        >        💡 When you run a container with the **`linux/amd64`** platform on an Apple M1 silicon mac, the Docker engine uses a technology called "Emulation" to translate the x86_64 instructions (used by the **`linux/amd64`** platform) to the ARM64 instructions (used by the Apple M1 silicon mac).
+        >
+        >      Docker Desktop for Mac, which is the version of Docker that runs on Apple M1 silicon macs, includes an emulation layer called "QEMU" that allows you to run containers built for the **`linux/amd64`** platform on an Apple M1 silicon mac. This emulation layer works by translating the x86_64 instructions to ARM64 instructions in real-time.
+        >
+        >      This emulation layer adds some overhead and can result in slower performance compared to running native ARM64 containers. However, for many applications, the performance impact is minimal and the benefits of running containers in a consistent environment across different platforms outweigh the performance cost.
+        >
+        >      To run a container with the **`linux/amd64`** platform on an Apple M1 silicon mac, you can use the **`--platform`** flag with the **`docker run`** command. For example, to run the **`hello-world`** image with the **`linux/amd64`** platform, you can run:
+        >
+        >        ```
+        >        docker run --platform linux/amd64 hello-world
+        >        ```
+        >
+        >      This will pull the **`hello-world`** image with the **`linux/amd64`** platform and run it on your Apple M1 silicon mac using QEMU emulation.
+        >
+        >      Note that not all images may work with emulation, as some images may have dependencies that are only available for a specific platform. It's always a good idea to check the compatibility of an image before running it on a different platform.
+
+2. 이미지 조회: `docker images | grep mysql`
+   ![img_15.png](img_15.png)
+3. 컨테이너 실행: 이름 따로 지정해서 run
+    - `docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:5.7`
+      - 컨테이너 내부 접속 후 `/etc/init.d/mysql start` → 레거시 방식! 따라서 위와 같이 접속 후 exec 명령어로 내부로 진입한다.
+4. 컨테이너 OS 확인: docker exec 명령어로 내부 접근
+   - `docker exec -it {container ID} bash` 명령어를 통해 컨테이너 내부로 접근
+   - `cat /etc/os-release` 명령어로 OS 확인
+   ![img_16.png](img_16.png)
+   - `mysql -u root -p`: MySQL 실행하기
+   - 컨테이너 종료하지 않고 터미널 빠져 나오려면 ctrl 누른 상태로 P 누르고 Q 누르기
+5. 컨테이너 내부 IP 확인: `docker inspect some-mysql | grep IPAddress`
+   ![img_17.png](img_17.png)
+
+### 실습 3-2: 컨테이너 모니터링 도구 cAdvisor 컨테이너 실행
+
+- 서비스 운영 하면서 필요한 시스템 Metric(CPU/메모리 사용률, 네트워크 트래픽 등)을 모니터링하면서 특이사항이 있을 때 대응하기 위해 모니터링 수행
+- 그러나 컨테이너라는 환경 하에서는 기존 모니터링 도구로는 container 모니터링 진행이 어렵다
+- 이러한 문제점을 해결하고 컨테이너를 모니터링하기 위한 도구로 구글에서 제공하는 cAdvisor(Container Advisor)를 많이 사용함
+> 주의: 기존 google/cadvisor로는 docker 실행에 에러 발생!
+> → 버전(latest → 0.46.0) &이미지 이름(google → gcr.io) 변경해야 된다. 
+> ref([link](https://github.com/google/cadvisor/issues/3073))
+
+```bash
+docker run \
+> --volume=/:/rootfs:ro \
+> --volume=/var/run:/var/run:rw \
+> --volume=/sys:/sys:ro \
+> --volume=/var/lib/docker/:/var/lib/docker:ro \
+> --publish=9559:8080 \
+> --detach=true \
+> --name=cadvisor \
+> gcr.io/cadvisor:v0.46.0
+```
+
+- `http://localhost:9559/` 접속
+- ![img_18.png](img_18.png)
+- 아무 이미지나 run한 뒤 (ex - nginx) 사이트 아래 쭉 내려가면 /docker 보이는데 클릭
+- ![img_19.png](img_19.png)
+- 그러면 해당 컨테이너 id  & CPU 사용량 등 확인 가능
+- ![img_20.png](img_20.png)
+
+### 3-3 웹서비스 실행을 위한 nginx 컨테이너 실행
+
+- `docker pull nginx:1.18`
+- `docker images` → nginx 이미지 확인
+- `docker run —name webserver1 -d -p 8001:80 nginx:1.18`
+    - —name: 컨테이너 이름 지정
+    - -d: 컨테이너를 백그라운들에서 실행하고 컨테이너 id를 출력
+    - -p: 컨테이너의 80번 포트를 host 포트 8001로 오픈
+        - 앞 번호: 호스트 포트
+        - 뒷 번호: 내부 컨테이너 포트
+- `sudo lsof -i :8001` : 현재 8001번 포트 상태 확인(PID, User, …) 
