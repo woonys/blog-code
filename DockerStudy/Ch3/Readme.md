@@ -267,3 +267,261 @@ docker run \
         - 앞 번호: 호스트 포트
         - 뒷 번호: 내부 컨테이너 포트
 - `sudo lsof -i :8001` : 현재 8001번 포트 상태 확인(PID, User, …) 
+  ![img_21.png](img_21.png)
+- localhost:8001 접속
+  ![img_22.png](img_22.png)
+- `docker stats webserver1`: 컨테이너의 리소스 사용량 실시간 확인
+  ![img_23.png](img_23.png)
+- `docker logs -f webserver1` : nginx 컨테이너 접근 로그 확인
+    ![img_24.png](img_24.png)
+  - 로그 켠 상태로 nginx 페이지 접속해서 새로고침 → 
+- `curl localhost:8001`: 프로토콜들을 이용해 URL 로 데이터를 전송하여 서버에 데이터를 보내거나 가져올때 사용하기 위한 CLI 도구
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+BH-L168:~ woony.kim$ docker stop webserver1
+webserver1
+BH-L168:~ woony.kim$ docker start webserver1
+webserver1
+BH-L168:~ woony.kim$ curl localhost:8001
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+```
+- `vi index.html`: index 파일 새로 생성
+```shell
+# index.html
+<h1> Hello, Jpub Docker. </h1>
+```
+- docker 컨테이너 내부로  index.html 파일 이동: `docker cp index.html webserver1:/usr/share/nginx/html/index.html`
+- 사이트 새로고침하면 변경된 것을 확인 가능
+    ![img_25.png](img_25.png)
+- `docker restart` : 컨테이너 재시작 - 기존 컨테이너 프로세스를 정지하고 새 컨테이너 프로세스를 시작. 따라서 컨테이너 동작에는 영향을 주지 않고 호스트의 PID만 변경된다.
+### 실습 3-4: 파이썬 프로그래밍 환경을 컨테이너로 제공
+
+- 샘플 코드 작성
+
+```python
+from random import shuffle
+from time import sleep
+
+gamenum = input('로또 게임 횟수를 입력하세요: ')
+for i in range(int(gamenum)):
+    balls = [x+1 for x in range(45)]
+    ret = []
+    for j in range(6):
+        shuffle(balls)       # balls를 무작위로 섞고
+        number = balls.pop() # balls의 가장 마지막 숫자를 추출한 뒤 제거
+        ret.append(number)   # 추출된 숫자를 ret에 추가
+    ret.sort()
+    print('로또번호[%d]: ' %(i+1), end='')
+    print(ret)
+    sleep(1)
+```
+
+- 파이썬 컨테이너 실행 후 py_lotto.py 샘플 코드 복사
+    - `docker run -itd —name=python_test -p 8900:8900 python`
+        - (복습) -d 옵션: 컨테이너를 백그라운드에서 실행하고 컨테이너 id를 출력
+
+          ![img_26.png](img_26.png)
+
+    - `docker cp py_lotto.py python_test:/` : 작성한 py 파일을 도커 컨테이너 내부로 전달
+- 컨테이너 확인: `docker exec -it python_test bash`
+- 외부에서 파이썬 컨테이너 코드 실행
+    - exec: 도커 컨테이너에 명령 전달(running 상태인 컨테이너에서만 가능한 명령어)
+
+  ![img_27.png](img_27.png)
+- *컨테이너 내부에 소스 코드, 구성 정보(.conf) 등을 변경하는 경우 `docker cp(COPY)` 명령어가 유용하다. (뒤에 Dockerfile 명령어 관련해서 배울 예정)
+- 컨테이너 내부 파일을 수정해야 한다면 컨테이너 내부에 편집기를 설치하거나 할 필요가 없음.
+
+### 실습 3-5. node.js 테스트 환경을 위한 컨테이너 실행
+
+- vi nodejs_test.js
+
+    ```python
+    const http = require('http');
+    const content = function(req, resp) {
+      resp.end("Good morning Korea~!" + "\n");
+      resp.writeHead(200);
+    }
+    const web = http.createServer(content);
+    web.listen(8002);
+    ```
+
+- `node nodejs_test.js` : fail
+    ![img_28.png](img_28.png)
+- `docker pull node`
+- `docker cp nodejs_test.js nodejs_test:/nodejs_test.js`
+- `docker exec -it nodejs_test node /nodejs_test.js`
+    ![img_29.png](img_29.png)
+![img_30.png](img_30.png)
+
+- `docker rename`: 컨테이너 이름 변경하고 싶을 때
+![img_31.png](img_31.png)
+
+- `docker commit`: 앞에서 생성한 컨테이너 노드 프로그램 환경과 저장한 소스코드 그대로 새로운 이미지 생성
+- `curl localhost:8008`
+    - code
+
+        ```html
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <title>Welcome to nginx!</title>
+        <style>
+        html { color-scheme: light dark; }
+        body { width: 35em; margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif; }
+        </style>
+        </head>
+        <body>
+        <h1>Welcome to nginx!</h1>
+        <p>If you see this page, the nginx web server is successfully installed and
+        working. Further configuration is required.</p>
+        
+        <p>For online documentation and support please refer to
+        <a href="http://nginx.org/">nginx.org</a>.<br/>
+        Commercial support is available at
+        <a href="http://nginx.com/">nginx.com</a>.</p>
+        
+        <p><em>Thank you for using nginx.</em></p>
+        </body>
+        </html>
+        ```
+
+- `docker cp index.html webserver8:/usr/share/nginx/html/index.html`
+    - 기존에 만들어뒀던 `index.html` 을 옮긴다.
+- `docker diff webserver8`: 변경 소스 확인
+    - index.html 변경된 것을 확인 가능
+
+      ![img_32.png](img_32.png)
+- `docker commit -a "jpub" webserver8 webfront:1.0`
+  - docker commit으로 이미지 생성 (-a: 생성자 이니셜)
+
+    ![img_33.png](img_33.png)
+
+- docker login 후 이미지 push
+    - `docker login`
+    - docker tag webfront:1.0 [본인ID]/webfront:1.0
+    - docker push [본인ID]/webfront:1.0
+
+  ![img_34.png](img_34.png)
+
+    - 푸시한 이미지 내려받아서 컨테이너로 잘 동작하는지 체크
+
+  ![img_35.png](img_35.png)
+
+    - [hub.docker.com](http://hub.docker.com) 사이트 확인
+
+  ![img_36.png](img_36.png)
+
+## 3.2.3 도커 볼륨 활용
+
+
+> 💡 Docker Volumes are the preferred mechanism for persisting data generated by and used by Docker containers([docs](https://docs.docker.com/storage/volumes/)).
+> 
+> `도커 볼륨은 도커 컨테이너로부터 생성되거나 사용되는 데이터를 영속화하는 메커니즘이다.`
+
+
+[Manage data in Docker(link)](https://docs.docker.com/storage/)
+
+![img_37.png](img_37.png)
+
+- 도커는 유니언 파일 시스템 사용
+    - 하나의 이미지로부터 여러 컨테이너를 만들 수 있는 방법을 제공 & 이미지에 변경 내용 저장
+
+**도커 볼륨**: 데이터베이스, 웹 프로그램 등 애플리케이션에서 발생하는 데이터에 접근 & 공유하기 위해서 사용
+
+- 도커 볼륨은 컨테이너에서 생성 & 재사용 → 호스트 운영체제에서 직접 접근 가능
+- 보존되어야 하는 데이터를 유지하기 위한 메커니즘 제공
+    - 일반적으로 컨테이너 내부 데이터는 컨테이너의 라이프사이클과 연관되어 컨테이너 종료 시 삭제
+    - 이를 영속화하는 방법으로 도커 볼륨 사용 시 컨테이너가 삭제되더라도 볼륨은 독립적으로 운영되기 때문에 삭제되지 않는다!
+
+### 도커 볼륨 타입
+
+![img_38.png](img_38.png)
+
+1. Volume: 호스트 파일 시스템의 일부 중 도커가 관리하는 영역`(/var/lib/docker/volumes/ on Linux -> 도커 데스크탑에서 가상화된!)`에 저장함. 도커가 아닌 프로세스는 해당 파일 시스템에 접근 불가. **도커 볼륨은 공식 문서 왈 도커에서 데이터를 영속화하는 가장 최고의 방법!**
+2. Bind mounts: 호스트 시스템 어디에나 저장 가능. 심지어 주요 시스템 파일이나 디렉토리가 될 수도 있다. 도커가 아닌 프로세스가 해당 파일 / 디렉토리를 언제든 변경 가능
+3. `tmpfs` mounts: 호스트 시스템의 메모리에 저장하며 파일 시스템에는 절대 저장하지 않음.
+
+1.  **Volume(**Bind mount, tmpfs mount는 따로 보기**)**
+    1. 도커에서 권장하는 방법 → `docker volume create [볼륨 이름]` 을 통해 볼륨 생성
+    2. 도커 볼륨: 도커 명령어로 관리
+    3. 여러 컨테이너 간에 안전하게 공유
+    4. 볼륨 드라이버로 원격 호스트 및 클라우드 환경에 볼륨 내용 저장 및 암호화
+    5. 새 볼륨으로 지정될 영역에 데이터를 미리 채우고 컨테이너 연결하면 바로 데이터 사용 가능
+- docker 볼륨 생성 실습
+    - `docker volume create my-appvol-1`
+    - `docker volume ls`
+    - `docker volume inspect my-appvol-1`
+
+    ```bash
+    docker run -d --name vol-test1 \
+    --mount source=my-appvol-1,target=/app \
+    ubuntu:20.04
+    ```
+![img_39.png](img_39.png)
+
+- `docker volume create`를 하지 않더라도 `docker ru`n할 때 볼륨 이름을 쓰면 자동으로 생성된다 → `docker inspect`에서 `my-appvol-2`가 자동 생성된 것을 확인
+
+![img_40.png](img_40.png)
+
+- docker volume 지우기: `docker volume rm [볼륨 이름]`
+    - 볼륨이 안 지워진다?!
+        - `Error response from daemon: remove my-appvol-2: volume is in use - [df8f1d056a1f89fe21395481fb303b47ebab05fd5745a5fce6300da30fc4b601, 18903a7f47908b4d009dc71c091a1847f646be08407bb677e5a66054c08412a1]`
+        - 만약 컨테이너가 해당 볼륨을 사용했다면 해당 컨테이너를 사용 중이지 않더라도 볼륨을 지울 수 없게끔 되어 있다.
+        - 이럴 때는 `docker ps -a`로 종료된 컨테이너까지 싹다 확인한 다음 해당 볼륨을 사용하고 있는 컨테이너 ID를 확인해서 삭제한다.
+
+          ![img_41.png](img_41.png)
+
+### 실습 3-6: 데이터베이스의 데이터 지속성 유지
+
+- 데이터베이스 컨테이너의 데이터 보호를 위해 볼륨 지정 가능.
+- 만약 컨테이너의 장애로 인해 서비스가 중단되어도 새로운 컨테이너에 동일 볼륨을 연결하면 데이터베이스의 DB, Table, Data 모두 동일하게 지속 가능
+- `docker run --name mysql-test -e MYSQL_ROOT_PASSWORD=1234 -e MYSQL_DATABASE=dockertest -v mysql-data-vol:/var/lib/mysql -d mysql:5.7`
