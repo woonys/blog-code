@@ -525,3 +525,62 @@ for i in range(int(gamenum)):
 - 데이터베이스 컨테이너의 데이터 보호를 위해 볼륨 지정 가능.
 - 만약 컨테이너의 장애로 인해 서비스가 중단되어도 새로운 컨테이너에 동일 볼륨을 연결하면 데이터베이스의 DB, Table, Data 모두 동일하게 지속 가능
 - `docker run --name mysql-test -e MYSQL_ROOT_PASSWORD=1234 -e MYSQL_DATABASE=dockertest -v mysql-data-vol:/var/lib/mysql -d mysql:5.7`
+
+
+## 3.2.4 도커 컨테이너의 자원 사용에 대한 런타임 제약
+
+### 서버 자원 모니터링
+
+- CPU, 메모리, 디스크 I/O, 네트워크 트래픽 등을 기본적으로 살펴보면서 성능에 문제점이 발생할 것 같은 징후를 찾아 예방
+- 서버 자원 모니터링 도구
+    - top
+    - htop
+    - sar
+    - iostat, df
+    - vmstat, free
+    - dstat
+    - iptraf-ng
+- 컨테이너를 호스트 운영체제에서 실행한 경우에도 자원 사용량 측정 가능 → 컨테이너는 프로세스
+- 컨테이너 생성 시 도커에서 제공하는 여러 런타임 제약 옵션 → 컨테이너 자원을 어떻게 효율적으로 운영할지 정의할 수 있음.
+- 컨테이너 생성 후에도 docker update 명령을 통해 변경이 가능
+- 리소스 런타임 제약 → 리눅스 커널이 제공하는 cgroup 기능으로 가능
+- cgroup 기능이 비활성된 경우 docker info 출력 마지막에 경고 표시가 나타나거나 컨테이너를 생성하는 docker run 이후에 세부 내용에 대한 경고 표시 출력
+
+### 컨테이너 리소스 런타임 제약 옵션
+
+- 도커에서 제공하는 런타임 제약 옵션
+    - CPU
+    - 메모리
+    - 디스크 I/O
+1. CPU 런타임 제약
+
+### 실습 3-11 `—cpu-shares`
+
+- 현재 사용 중인 서버 CPU 수 체크
+
+    ```bash
+    sysctl -n hw.logicalcpu # the command in Mac terminal 
+    ```
+
+- `top`를 통해 확인
+- stress 프로그램을 돌려서 측정
+
+>    💡 `-cpu-shares`는 한 코어에 여러 도커 컨테이너가 작동할 때, 컨테이너간 상대적 가중치. 실제 프로세서 클럭 속도와는 관련이 없다. 
+>
+>  모든 컨테이너는 기본적으로 1024 값을 가지고 있고, 혼자 한 코어를 사용할 때는 아무 의미가 없다. 한 코어에 두 컨테이너가 시작하는 경우, cpu-share 값을 설정하지 않으면 기본값인 1024를 가지기 때문에 CPU 시간이 둘 다 균등하게 분할된다. (해당 코어를 쓰는 다른 프로세스가 없다고 가정)
+
+- cpu 4개에 부하 가중해서 모니터링
+
+    ```bash
+    docker run -d --name cpu_1024 --cpu-shares 1024 leecloudo/stress:1.0 stress --cpu 4
+    ```
+
+  ![img_42.png](img_42.png)
+
+- cpu 2개에 부하 가중해서 모니터링 → CPU shares 설정으로 512만큼 줄어든 것을 볼 수 있음.
+
+    ```bash
+    docker run -d --name cpu_512 --cpu-shares 512 leecloudo/stress:1.0 stress --cpu 2 # stress --cpu 2는 명령어
+    ```
+
+  ![img_43.png](img_43.png)
