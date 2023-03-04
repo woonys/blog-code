@@ -578,3 +578,331 @@ CMD python /app/app.py
     - Dockerfile 작성 시 권장 사항을 준수하는 것
 - 이미지 빌드 시간을 단축하고 크기가 작은 이미지는 컨테이너 애플리케이션 효율성의 기본!
 - 도커 컨테이너를 사용하는 이유도 마찬가지다. 빠르고 탄력적인 컨테이너 서비스를 원하기 때문.
+
+## 4.3.1 다양한 방법의 Dockerfile 작성
+
+### 실습 4-1 셸 스크립트를 이용한 환경 구성 실습
+
+- ubuntu 18.04 버전을 베이스로 아파치2 패키지 설치
+- 필요한 환경 구성을 셸 스크립트로 생성하고 컨테이너 실행될 때 셸 실행
+- 이미지 빌드 시 Buildkit 이용하면 빌드를 병렬 처리 → docker build 방식보다 이미지 생성 속도가 빠름
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp1$ vi Dockerfile
+
+```Dockerfile
+FROM ubuntu:18.04
+RUN apt-get update && \
+apt-get -y install apache2
+
+# 웹 기본 페이지 생성
+RUN echo 'Docker Container Application.' > /var/www/html/index.html
+
+# 필요한 작업 경로 생성(WORKDIR로 지정해도 무방)
+RUN mkdir /webapp
+
+# 아파치2에 필요한 환경 변수, 디렉토리, 서비스 실행 등의 정보를 셸 스크립트에
+ 작성하고 실행 권한 부여
+
+RUN echo '. /etc/apache2/envvars' > /webapp/run_http.sh && \
+echo 'mkdir -p /var/run/apache2' >> /webapp/run_http.sh && \
+echo 'mkdir -p /var/lock/apache2' >> /webapp/run_http.sh && \
+echo '/usr/sbin/apache2 -D FOREGROUND' >> /webapp/run_http.sh && \
+chmod 744 /webapp/run_http.sh
+
+#80번 포트 오픈
+EXPOSE 80
+
+#RUN 명령어로 작성된 셸 스크립트를 컨테이너가 동작할 때 실행
+CMD /webapp/run_http.sh
+```
+
+```
+
+- buildkit을 이용해 이미지 빌드 수행
+
+```docker
+# buildkit을 이용해 이미지 빌드 수행
+ubuntu@ip-172-31-3-145:~/webapp1$ DOCKER_BUILDKIT=1 docker build -t webapp:7.0 .
+[+] Building 33.5s (9/9) FINISHED                                            
+ => [internal] load build definition from Dockerfile                    0.1s
+ => => transferring dockerfile: 861B                                    0.0s
+ => [internal] load .dockerignore                                       0.0s
+ => => transferring context: 2B                                         0.0s
+ => [internal] load metadata for docker.io/library/ubuntu:18.04         1.5s
+ => CACHED [1/5] FROM docker.io/library/ubuntu:18.04@sha256:a3765b4d74  0.0s
+ => [2/5] RUN apt-get update && apt-get -y install apache2             29.0s
+ => [3/5] RUN echo 'Docker Container Application.' > /var/www/html/ind  0.5s
+ => [4/5] RUN mkdir /webapp                                             0.4s 
+ => [5/5] RUN echo '. /etc/apache2/envvars' > /webapp/run_http.sh && e  0.4s 
+ => exporting to image                                                  1.5s 
+ => => exporting layers                                                 1.5s 
+ => => writing image sha256:c9a3fae5dcff3161d2c49a3e6c4ebc3a8834af2133  0.0s 
+ => => naming to docker.io/library/webapp:7.0                           0.0s
+```
+
+- 빌드 완료된 이미지 정보를 통해 Dockerfile에 작성된 명령어를 확인
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp1$ docker image history webapp:7.0
+IMAGE          CREATED         CREATED BY                                      SIZE      COMMENT
+c9a3fae5dcff   2 minutes ago   CMD ["/bin/sh" "-c" "/webapp/run_http.sh"]      0B        buildkit.dockerfile.v0
+<missing>      2 minutes ago   EXPOSE map[80/tcp:{}]                           0B        buildkit.dockerfile.v0
+<missing>      2 minutes ago   RUN /bin/sh -c echo '. /etc/apache2/envvars'…   108B      buildkit.dockerfile.v0
+<missing>      2 minutes ago   RUN /bin/sh -c mkdir /webapp # buildkit         0B        buildkit.dockerfile.v0
+<missing>      2 minutes ago   RUN /bin/sh -c echo 'Docker Container Applic…   30B       buildkit.dockerfile.v0
+<missing>      2 minutes ago   RUN /bin/sh -c apt-get update && apt-get -y …   141MB     buildkit.dockerfile.v0
+<missing>      4 weeks ago     /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
+<missing>      4 weeks ago     /bin/sh -c #(nop) ADD file:365c129e10f7ef159…   63.1MB    
+<missing>      4 weeks ago     /bin/sh -c #(nop)  LABEL org.opencontainers.…   0B        
+<missing>      4 weeks ago     /bin/sh -c #(nop)  LABEL org.opencontainers.…   0B        
+<missing>      4 weeks ago     /bin/sh -c #(nop)  ARG LAUNCHPAD_BUILD_ARCH     0B        
+<missing>      4 weeks ago     /bin/sh -c #(nop)  ARG RELEASE                  0B
+```
+
+- 컨테이너 생성해 이미지 사용을 테스트
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp1$ docker run -itd -p 8007:80 --name=webapp07 webapp:7.0
+
+ubuntu@ip-172-31-3-145:~/webapp1$ docker ps
+CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS         PORTS                                   NAMES
+2afbb2f62cf4   webapp:7.0     "/bin/sh -c /webapp/…"   4 seconds ago   Up 4 seconds   0.0.0.0:8007->80/tcp, :::8007->80/tcp   webapp07
+ce1b36263d79   myphpapp:1.0   "bash"                   43 hours ago    Up 43 hours    0.0.0.0:8006->80/tcp, :::8006->80/tcp   phpapp
+ubuntu@ip-172-31-3-145:~/webapp1$ curl localhost:8007
+Docker Container Application.
+```
+
+<aside>
+💡 `RUN`과 `CMD` 차이:
+- `RUN`: Dockerfile로 이미지 빌드 시에 한 번만 실행
+- `CMD`: 컨테이너가 실행될 때 사용되는 기본 명령을 작성
+
+</aside>
+
+### 실습 4-2: `ADD` 명령어의 자동 압축 해제 기능 활용 실습
+
+- Dockerfile
+
+```docker
+FROM ubuntu:14.04
+MAINTAINER "woony.kim <woony.kim@balancehero.com>"
+LABEL "purpose"="container web application practice."
+
+#apt 업데이트 후 필요한 패키지 설치
+RUN apt-get update && apt-get -y install apache2 \
+vim \
+curl
+
+#다운로드한 웹 소스 압축파일을 아파치 기본 웹 페이지 경로에 복사
+#ADD 명령어는 COPY와 달리 압축 파일을 해제해 경로에 복사하는 장점이 있
+음
+
+ADD webapp.tar.gz /var/www/html
+
+# 해당 경로로 이동. 이후 컨테이너 실행 시 기본 경로로 설정
+
+WORKDIR /var/www/html
+
+# 컨테이너 80번 포트 열어주기
+EXPOSE 80
+
+#컨테이너 실행 시 자동으로 아파치 데몬 실행
+CMD /usr/sbin/apachectl -D FOREGROUND
+```
+
+- docker 빌드 & 이미지 정보 확인
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp$ docker build -t webapp:8.0 -f ./dockerfiles/Dockerfile .
+[+] Building 26.8s (9/9) FINISHED                                     
+ => [internal] load build definition from Dockerfile             0.0s
+ => => transferring dockerfile: 758B                             0.0s
+ => [internal] load .dockerignore                                0.0s
+ => => transferring context: 2B                                  0.0s
+ => [internal] load metadata for docker.io/library/ubuntu:14.04  0.0s
+ => CACHED [1/4] FROM docker.io/library/ubuntu:14.04             0.0s
+ => [2/4] RUN apt-get update && apt-get -y install apache2 vim  25.8s
+ => [internal] load build context                                0.0s
+ => => transferring context: 55.73kB                             0.0s
+ => [3/4] ADD webapp.tar.gz /var/www/html                        0.2s
+ => [4/4] WORKDIR /var/www/html                                  0.0s 
+ => exporting to image                                           0.7s 
+ => => exporting layers                                          0.7s 
+ => => writing image sha256:71849b634a722d8ba93bba3c64ba71bbfa7  0.0s 
+ => => naming to docker.io/library/webapp:8.0                    0.0s 
+ubuntu@ip-172-31-3-145:~/webapp$ docker image history webapp:8.0
+IMAGE          CREATED              CREATED BY                                      SIZE      COMMENT
+71849b634a72   About a minute ago   CMD ["/bin/sh" "-c" "/usr/sbin/apachectl -D …   0B        buildkit.dockerfile.v0
+<missing>      About a minute ago   EXPOSE map[80/tcp:{}]                           0B        buildkit.dockerfile.v0
+<missing>      About a minute ago   WORKDIR /var/www/html                           0B        buildkit.dockerfile.v0
+<missing>      About a minute ago   ADD webapp.tar.gz /var/www/html # buildkit      197kB     buildkit.dockerfile.v0
+<missing>      About a minute ago   RUN /bin/sh -c apt-get update && apt-get -y …   67.3MB    buildkit.dockerfile.v0
+<missing>      About a minute ago   LABEL purpose=container web application prac…   0B        buildkit.dockerfile.v0
+<missing>      About a minute ago   MAINTAINER "woony.kim <woony.kim@balancehero…   0B        buildkit.dockerfile.v0
+<missing>      23 months ago        /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
+<missing>      23 months ago        /bin/sh -c mkdir -p /run/systemd && echo 'do…   7B        
+<missing>      23 months ago        /bin/sh -c [ -z "$(apt-get indextargets)" ]     0B        
+<missing>      23 months ago        /bin/sh -c set -xe   && echo '#!/bin/sh' > /…   195kB     
+<missing>      23 months ago        /bin/sh -c #(nop) ADD file:276b5d943a4d284f8…   196MB
+```
+
+- docker run & curl을 이용해 테스트
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp$ docker run -itd -p 8008:80 --name=webapp08 webapp:8.0
+860caead6e7707f1c1c4b58b7ff50453feedd05656eb002780d1445a1f763499
+ubuntu@ip-172-31-3-145:~/webapp$ curl localhost:8008
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Docker Container Web Application</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <link rel="stylesheet" href="./css/bootstrap.css">
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-sm" style="background-color:#2684FF;">
+    <a class="navbar-brand" href="https:///hub.docker.com" target="_blank" style="color:#fff;">
+	<img src="./pngs/docker_logo.png">Docker Container Application by kevin.lee "hylee@dshub.cloud"</a>
+  </nav>
+
+  <div class="container" style="padding:20px 0 0 0">
+    <div class="row">
+      <img src="./pngs/docker.png" style="width:100%"/>
+    </div>
+  </div>
+</body>
+
+</html>
+```
+
+- 컨테이너 내부 진입 → 확인
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp$ docker exec -it webapp08 bash
+root@860caead6e77:/var/www/html# ls
+css  index.html  pngs
+root@860caead6e77:/var/www/html#
+```
+
+- Dockerfile의 ADD는 일반적인 호스트 파일과 디렉터리를 복사하는 방법도 제공하지만, 압축 파일이면 이미지 내에 포함시킬 때 압축을 자동으로 풀어서 저장해주는 장점이 있음
+
+### 실습 4-3: 이미지 용량 절감을 위한 실습
+
+- apt를 이용한 패키지 업데이트와 설치 시 남는 캐시를 제거해 생성 이미지 용량이 줄어드는 걸 체크
+- 캐시 삭제 명령: `apt-get clean, apt-get autoremove, rm -rfv ~`
+
+---
+
+- Dockerfile
+
+```docker
+FROM ubuntu:14.04
+RUN apt-get update && \
+apt-get install apache2 -y -qq --no-install-recommends && \
+apt-get clean -y && \
+apt-get autoremove -y && \
+rm -rfv /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+WORKDIR /var/www/html
+
+ADD index.html .
+
+EXPOSE 80
+
+# 컨테이너 실행 시 자동으로 아파치 데몬 실행
+CMD apachectl -D FOREGROUND
+```
+
+- 빌드
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp3$ docker build -t webapp:9.0 .
+[+] Building 0.1s (9/9) FINISHED                                              
+ => [internal] load build definition from Dockerfile                     0.0s
+ => => transferring dockerfile: 381B                                     0.0s
+ => [internal] load .dockerignore                                        0.0s
+ => => transferring context: 2B                                          0.0s
+ => [internal] load metadata for docker.io/library/ubuntu:14.04          0.0s
+ => [1/4] FROM docker.io/library/ubuntu:14.04                            0.0s
+ => [internal] load build context                                        0.0s
+ => => transferring context: 31B                                         0.0s
+ => CACHED [2/4] RUN apt-get update && apt-get install apache2 -y -qq -  0.0s
+ => CACHED [3/4] WORKDIR /var/www/html                                   0.0s
+ => CACHED [4/4] ADD index.html .                                        0.0s
+ => exporting to image                                                   0.0s
+ => => exporting layers                                                  0.0s
+ => => writing image sha256:1d328fd9765ad14252603e66e5432d6e79835374ad4  0.0s
+ => => naming to docker.io/library/webapp:9.0                            0.0s
+```
+
+- 이미지 확인
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp3$ docker image history webapp:9.0
+IMAGE          CREATED         CREATED BY                                      SIZE      COMMENT
+1d328fd9765a   3 minutes ago   CMD ["/bin/sh" "-c" "apachectl -D FOREGROUND…   0B        buildkit.dockerfile.v0
+<missing>      3 minutes ago   EXPOSE map[80/tcp:{}]                           0B        buildkit.dockerfile.v0
+<missing>      3 minutes ago   ADD index.html . # buildkit                     33B       buildkit.dockerfile.v0
+<missing>      3 minutes ago   WORKDIR /var/www/html                           0B        buildkit.dockerfile.v0
+<missing>      3 minutes ago   RUN /bin/sh -c apt-get update && apt-get ins…   8.8MB     buildkit.dockerfile.v0
+<missing>      23 months ago   /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
+<missing>      23 months ago   /bin/sh -c mkdir -p /run/systemd && echo 'do…   7B        
+<missing>      23 months ago   /bin/sh -c [ -z "$(apt-get indextargets)" ]     0B        
+<missing>      23 months ago   /bin/sh -c set -xe   && echo '#!/bin/sh' > /…   195kB     
+<missing>      23 months ago   /bin/sh -c #(nop) ADD file:276b5d943a4d284f8…   196MB
+```
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp3$ curl localhost:8009
+<h1> Docker container app. </h1>
+```
+
+---
+
+- 이미지 용량 줄이는 방법으로 하나의 RUN 명령에 clean, autoremove 및 캐시, 임시 파일 삭제하는 rm 명령을 포함시켜 레이어 크기 최소화
+    - `apt-get clean` : 설치에 사용한 패키지 라이브러리, 임시 파일, 오래된 파일 삭제
+    - `apt-get autoremove` : 다른 패키지 종속성 충족시키기 위해 자동으로 설치된 패키지 삭제
+    - `rm -rfv /tmp/* /var/lib/apt/lists/* /var/tmp/*` : 연관된 캐시 파일 모두 삭제
+- 캐시 제거하지 않은 이미지와 용량 비교(**8.8MB vs 23MB**)
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp3$ docker image history webapp:9.0
+IMAGE          CREATED         CREATED BY                                      SIZE      COMMENT
+1d328fd9765a   3 minutes ago   CMD ["/bin/sh" "-c" "apachectl -D FOREGROUND…   0B        buildkit.dockerfile.v0
+<missing>      3 minutes ago   EXPOSE map[80/tcp:{}]                           0B        buildkit.dockerfile.v0
+<missing>      3 minutes ago   ADD index.html . # buildkit                     33B       buildkit.dockerfile.v0
+<missing>      3 minutes ago   WORKDIR /var/www/html                           0B        buildkit.dockerfile.v0
+<missing>      3 minutes ago   **RUN /bin/sh -c apt-get update && apt-get ins…   8.8MB**     buildkit.dockerfils
+le.v0
+<missing>      23 months ago   /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
+<missing>      23 months ago   /bin/sh -c mkdir -p /run/systemd && echo 'do…   7B        
+<missing>      23 months ago   /bin/sh -c [ -z "$(apt-get indextargets)" ]     0B        
+<missing>      23 months ago   /bin/sh -c set -xe   && echo '#!/bin/sh' > /…   195kB     
+<missing>      23 months ago   /bin/sh -c #(nop) ADD file:276b5d943a4d284f8…   196MB
+```
+
+```docker
+ubuntu@ip-172-31-3-145:~/webapp3_no_cache$ docker image history webapp:10.0
+IMAGE          CREATED          CREATED BY                                      SIZE      COMMENT
+728c6750782c   15 seconds ago   CMD ["/bin/sh" "-c" "apachectl -D FOREGROUND…   0B        buildkit.dockerfile.v0
+<missing>      15 seconds ago   EXPOSE map[80/tcp:{}]                           0B        buildkit.dockerfile.v0
+<missing>      15 seconds ago   ADD index.html . # buildkit                     33B       buildkit.dockerfile.v0
+<missing>      15 seconds ago   WORKDIR /var/www/html                           0B        buildkit.dockerfile.v0
+<missing>      15 seconds ago   **RUN /bin/sh -c apt-get update && apt-get ins…   23MB**      buildkit.dockerfile.v0
+<missing>      23 months ago    /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
+<missing>      23 months ago    /bin/sh -c mkdir -p /run/systemd && echo 'do…   7B        
+<missing>      23 months ago    /bin/sh -c [ -z "$(apt-get indextargets)" ]     0B        
+<missing>      23 months ago    /bin/sh -c set -xe   && echo '#!/bin/sh' > /…   195kB     
+<missing>      23 months ago    /bin/sh -c #(nop) ADD file:276b5d943a4d284f8…   196MB
+```
+
+<aside>
+💡 캐시와 임시 파일만 삭제해도 용량 변화가 크다!
+
+</aside>
+
+- dive: 도커 이미지 레이어 효율성 검증 도구
