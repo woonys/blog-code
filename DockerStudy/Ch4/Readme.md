@@ -900,9 +900,220 @@ IMAGE          CREATED          CREATED BY                                      
 <missing>      23 months ago    /bin/sh -c #(nop) ADD file:276b5d943a4d284f8…   196MB
 ```
 
-<aside>
-💡 캐시와 임시 파일만 삭제해도 용량 변화가 크다!
 
-</aside>
+> 💡 캐시와 임시 파일만 삭제해도 용량 변화가 크다!
 
 - dive: 도커 이미지 레이어 효율성 검증 도구
+
+### 실습 4-4: 파이썬 웹 프레임워크인 플라스크를 이용한 마이크로 웹 프레임워크 구축 실습
+
+- 플라스크: 간결하고 가벼운 파이썬 웹 프레임워크
+- 쿠버네티스를 이용한 플라스크 서버 구축 시 사전에 도커로 테스트
+- 파이썬 이미지를 베이스로 지정하고 필요한 패키지 설치
+- 파이썬 코드로 플라스크 애플리케이션 생성
+
+---
+
+- 디렉토리명: 4_4_py_flask (`mkdir`)
+
+- 1. Dockerfile 작성
+
+  ```docker
+  # 베이스 이미지 작성
+  FROM python:3.8-alpine
+  
+  #업데이트 및 필요한 패키지 설치
+  RUN apk update && \
+          apk add --no-cache \
+          bash
+  RUN apk add --update build-base python3-dev py-pip
+  
+  # 플라스크 환경 변수 생성
+  # 플라스크는 기본 애플리케이션으로 app.py 인식
+  # FLASK_APP 환경 변수를 통해 애플리케이션 이름 지정
+  # FLASK_ENV=development를 지정하지 않으면 운영 환경(production)으로 설치
+  
+  ENV LIBRARY_PATH=/lib:/usr/lib
+  ENV FLASK_APP=py_app
+  ENV FLASK_ENV=development
+  
+  #컨테이너 9000번 포트 오픈
+  EXPOSE 9000
+  
+  # WORKDIR 명령어로 /py_app 경로로 이동 & 현재 디렉터리의 app 경로에 모든 파일을 /py_app에 복사
+  
+  WORKDIR /py_app
+  COPY ./app/ .
+  
+  # requirements.txt 목록에 있는 모듈 설치
+  RUN pip install -r requirements.txt
+  
+  # 파이썬 실행 명령으로 py_app.py 코드를 인수로 받아 실행
+  # ENTRYPOINT: 인자 변경 불가
+  ENTRYPOINT ["python"]
+  # CMD: 인자 변경 가능
+  CMD ["py_app.py"]
+  ```
+
+- 2. 플라스크 작성
+    - requirements.txt
+
+  ```docker
+  Flask==2.0
+  # 책의 1.1.2 버전은 jinja2 의존성으로 인해 fail
+  ```
+
+  ```docker
+  docker run -it -p 9000:9000 -v ${PWD}/app:/py_app py_flask:1.0
+  
+  ---
+  
+  Traceback (most recent call last):
+    File "py_app.py", line 1, in <module>
+      from flask import Flask
+    File "/usr/local/lib/python3.8/site-packages/flask/__init__.py", line 14, in <module>
+      from jinja2 import escape
+  ImportError: cannot import name 'escape' from 'jinja2' (/usr/local/lib/python3.8/site-packages/jinja2/__init__.py)
+  ```
+
+    - py_app.py
+
+  ```docker
+  from flask import Flask
+  
+  py_app = Flask(__name__)
+  
+  # 특정 주소에 접속하면 바로 다음 줄에 있는 python_flask() 함수를 호출하는 플라스크 데코레이터
+  
+  @py_app.route('/')
+  def python_flask():
+      return """
+      <h1 style="text-align:center;">Docker container application: Python & Flask!</h1>
+          <p style="text-align:center;">This is micro web framework for running Flask inside Docker.</p>
+          """
+  # 프로그램 시작 시 아래 코드 실행(기본 포트 ->9000)
+  if __name__ == '__main__':
+      py_app.run(host:'0.0.0.0', port=9000, debug=True)
+  ```
+
+- 3. .dockerignore 작성
+
+  ```docker
+  Dockerfile
+  ```
+
+- 4. tree 도구로 애플리케이션 전체 구조 확인
+    - `sudo apt-get -y install tree` (tree 도구 설치)
+    - `tree -a`
+
+  ```docker
+  ubuntu@ip-172-31-3-145:~/4th/4_4_py_flask$ tree -a
+  .
+  ├── .dockerignore
+  ├── Dockerfile
+  └── app
+      ├── py_app.py
+      └── requirements.txt
+  ```
+
+- 5. 빌드킷으로 이미지 빌드
+
+  ```docker
+  DOCKER_BUILDKIT=1 docker build -t py_flask:1.0 .
+  ```
+
+- 6. 이미지 확인
+
+  ```docker
+  **ubuntu@ip-172-31-3-145**:**~/4th/4_4_py_flask**$ docker images | grep py_flask
+  
+  **py_flask**         1.0       724a1864e82a   14 seconds ago   418MB
+  
+  **ubuntu@ip-172-31-3-145**:**~/4th/4_4_py_flask**$ docker image history py_flask1.0
+  
+  Error response from daemon: No such image: py_flask1.0:latest
+  
+  **ubuntu@ip-172-31-3-145**:**~/4th/4_4_py_flask**$ docker image history py_flask:1.0
+  
+  IMAGE          CREATED          CREATED BY                                      SIZE      COMMENT
+  
+  724a1864e82a   39 seconds ago   CMD ["py_app.py"]                               0B        buildkit.dockerfile.v0
+  
+  <missing>      39 seconds ago   ENTRYPOINT ["python"]                           0B        buildkit.dockerfile.v0
+  
+  <missing>      39 seconds ago   RUN /bin/sh -c pip install -r requirements.t…   11.2MB    buildkit.dockerfile.v0
+  
+  <missing>      44 seconds ago   COPY ./app/ . # buildkit                        598B      buildkit.dockerfile.v0
+  
+  <missing>      44 seconds ago   WORKDIR /py_app                                 0B        buildkit.dockerfile.v0
+  
+  <missing>      44 seconds ago   EXPOSE map[9000/tcp:{}]                         0B        buildkit.dockerfile.v0
+  
+  <missing>      44 seconds ago   ENV FLASK_ENV=development                       0B        buildkit.dockerfile.v0
+  
+  <missing>      44 seconds ago   ENV FLASK_APP=py_app                            0B        buildkit.dockerfile.v0
+  
+  <missing>      44 seconds ago   ENV LIBRARY_PATH=/lib:/usr/lib                  0B        buildkit.dockerfile.v0
+  
+  <missing>      44 seconds ago   RUN /bin/sh -c apk add --update build-base p…   356MB     buildkit.dockerfile.v0
+  
+  <missing>      51 seconds ago   RUN /bin/sh -c apk update &&  apk add --no-c…   4.02MB    buildkit.dockerfile.v0
+  
+  <missing>      7 days ago       /bin/sh -c #(nop)  CMD ["python3"]              0B
+  
+  <missing>      7 days ago       /bin/sh -c set -eux;   wget -O get-pip.py "$…   10.2MB
+  
+  <missing>      7 days ago       /bin/sh -c #(nop)  ENV PYTHON_GET_PIP_SHA256…   0B
+  
+  <missing>      7 days ago       /bin/sh -c #(nop)  ENV PYTHON_GET_PIP_URL=ht…   0B
+  
+  <missing>      2 weeks ago      /bin/sh -c #(nop)  ENV PYTHON_SETUPTOOLS_VER…   0B
+  
+  <missing>      2 weeks ago      /bin/sh -c #(nop)  ENV PYTHON_PIP_VERSION=22…   0B
+  
+  <missing>      2 weeks ago      /bin/sh -c set -eux;  for src in idle3 pydoc…   32B
+  
+  <missing>      2 weeks ago      /bin/sh -c set -eux;   apk add --no-cache --…   28.6MB
+  
+  <missing>      2 weeks ago      /bin/sh -c #(nop)  ENV PYTHON_VERSION=3.8.16    0B
+  
+  <missing>      2 weeks ago      /bin/sh -c #(nop)  ENV GPG_KEY=E3FF2839C048B…   0B
+  
+  <missing>      2 weeks ago      /bin/sh -c set -eux;  apk add --no-cache   c…   1.64MB
+  
+  <missing>      2 weeks ago      /bin/sh -c #(nop)  ENV LANG=C.UTF-8             0B
+  
+  <missing>      2 weeks ago      /bin/sh -c #(nop)  ENV PATH=/usr/local/bin:/…   0B
+  
+  <missing>      3 weeks ago      /bin/sh -c #(nop)  CMD ["/bin/sh"]              0B
+  
+  <missing>      3 weeks ago      /bin/sh -c #(nop) ADD file:40887ab7c06977737…   7.05MB
+  ```
+
+- 7. Docker run
+
+  ```docker
+  ubuntu@ip-172-31-3-145:~/4th/4_4_py_flask$ 
+  
+  docker run -it -p 9000:9000 \
+  > -v ${PWD}/app:/py_app \
+  > py_flask:1.0
+  ```
+
+- 8. 사이트 확인(저는 포트 열기 귀찮아서 터미널 하나 더 열고 curl 명령어로 확인했습니다 ㅎ..)
+
+  ```bash
+  ubuntu@ip-172-31-3-145:~$ curl localhost:9000
+  
+      <h1 style="text-align:center;">Docker container application: Python & Flask!</h1>
+          <p style="text-align:center;">This is micro web framework for running Flask inside Docker.</p>
+
+
+- 도커 컨테이너: 개발자가 각 애플리케이션을 단일 운영체제에서 격리하고 실행한다.
+- 경량 컨테이너는 가상 머신에 비해 비용 절감 및 자원 효율적 사용 → 성능 향상에 도움
+
+### 4-5 빌드 의존성 제거와 이미지 경량화를 위한 다단계 빌드 실습
+
+- 다단계 빌드는 FROM 명령으로 여러 단계 빌드 만들고 다른 단계에 AS를 이용해 이름 부여 가능
+- 애플리케이션 구동에 필요한 특정 데이터만 가져올 수 있기에 이미지 경량화할 수 있음
+- 다단계 빌드로 작성된 이미지는 모든 빌드 의존성이 하나의 환경에 포함되므로 빌드 의존성 제거 가능
