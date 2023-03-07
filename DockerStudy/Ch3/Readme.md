@@ -572,7 +572,7 @@ for i in range(int(gamenum)):
 - cpu 4개에 부하 가중해서 모니터링
 
     ```bash
-    docker run -d --name cpu_1024 --cpu-shares 1024 leecloudo/stress:1.0 stress --cpu 4
+    docker run -d --name cpu_1024 --cpu-share`s 1024 leecloudo/stress:1.0 stress --cpu 4
     ```
 
   ![img_42.png](img_42.png)
