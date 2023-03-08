@@ -210,3 +210,81 @@ NETWORK ID     NAME                  DRIVER    SCOPE
 188b1ccf3458   mariadb_app_default   bridge    local
 576b3bd4e55a   none                  null      local
 ```
+
+## 5.1.2 도커 컴포즈 YAML 코드 작성
+
+- 쿠버네티스 역시 거의 모든 오브젝트를 YAML 코드로 작성 → 도커 이후 쿠버네티스 공부할 때도 도움
+- YAML: 사용자가 쉽게 읽고 쓸 수 있는 텍스트 구조
+  - 주의: 들여쓰기를 탭이 아닌 공백으로 정확히 구분해야 함(2칸)
+
+### 1. 버전 정의
+
+- 야믈 코드 첫 줄: 버전 명시
+
+```bash
+version: '3.8'
+```
+
+- 컴포즈 버전: 도커 엔진 릴리스와 연관
+
+### 2. 서비스 정의
+
+- 도커 컴포즈를 통해 실행할 서비스를 정의
+- 도커 컴포즈: 컨테이너 대신 서비스 개념을 사용
+  - 상위의 version과 동일 레벨에서 작성
+
+```bash
+version: '3.8'
+services:
+```
+
+- `services` 하위에는 실행될 컨테이너 서비스를 작성 & 하위 레벨에 도커 명령 실행과 유사하게 컨테이너 실행에 필요한 옵션 작성
+
+```bash
+version: '3.8'
+services:
+	myweb:
+		image: nginx:latest
+	mydb:
+		image: mariadb:10.4.6
+```
+
+- Dockerfile을 작성해서 실행하는 경우는 미리 빌드하거나 아래와 같이 build 옵션을 사용하면 알아서 이미지 빌드 후 up
+
+```bash
+version: '3.8'
+services:
+	myweb:
+		build: .
+```
+
+### 3. 네트워크 정의
+
+- 다중 컨테이너들이 사용할 최상위 네트워크 키를 정의하고 이하 하위 서비스 단위로 네트워크 선택할 수 있음.
+
+```bash
+version: '3.8'
+services:
+	...
+networks:
+	default:
+		external:
+			name: ~~
+```
+
+### 4. 볼륨 정의
+
+- 데이터 지속성 유지하기 위해 최상위 레벨에 볼륨 정의하고 서비스 레벨에서 볼륨명과 서비스 내부 디렉터리를 바인드
+
+```bash
+version: '3.8'
+services:
+	myweb:
+		image: mysql:5.7
+		volumes:
+			- db_data:/var/lib/mysql
+```
+
+### 5. 도커 명령어와 도커 컴포즈 야믈 코드 비교
+
+- 도커 컴포즈 내 야믈 코드 옵션은 도커 명령어를 기반
