@@ -288,3 +288,120 @@ services:
 ### 5. 도커 명령어와 도커 컴포즈 야믈 코드 비교
 
 - 도커 컴포즈 내 야믈 코드 옵션은 도커 명령어를 기반
+
+### 구성 실습: docker-compose로 다중 컨테이너 서비스 실행하기
+
+- WordPress
+- MySQL
+
+```bash
+# 볼륨 생성
+ubuntu@ip-172-31-3-145:~$ docker volume create mydb_data
+mydb_data
+ubuntu@ip-172-31-3-145:~$ docker volume create myweb_data
+myweb_data
+ubuntu@ip-172-31-3-145:~$ docker volume ls
+DRIVER    VOLUME NAME
+local     mydb_data
+local     myweb_data
+
+ubuntu@ip-172-31-3-145:~$ docker inspect --type volume mydb_data
+[
+    {
+        "CreatedAt": "2023-03-10T14:15:07Z",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/mydb_data/_data",
+        "Name": "mydb_data",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+
+ubuntu@ip-172-31-3-145:~$ docker inspect --type volume myweb_data
+[
+    {
+        "CreatedAt": "2023-03-10T14:15:17Z",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/myweb_data/_data",
+        "Name": "myweb_data",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+ubuntu@ip-172-31-3-145:~$ docker network create myapp-net
+d84e8d8b345d9fc87d368e390824af2ea44001f762e45d80c7ad2f2e48fb0bb3
+ubuntu@ip-172-31-3-145:~$ docker network ls
+NETWORK ID     NAME                  DRIVER    SCOPE
+8383b11eb801   bridge                bridge    local
+48faf2927a8f   host                  host      local
+223c2dee96bd   mariadb_app_default   bridge    local
+d84e8d8b345d   myapp-net             bridge    local
+576b3bd4e55a   none                  null      local
+
+ubuntu@ip-172-31-3-145:~/my_wp$ ls
+docker-compose.yml
+ubuntu@ip-172-31-3-145:~/my_wp$ vi docker-compose.yml 
+ubuntu@ip-172-31-3-145:~/my_wp$ docker-compose up -d
+ERROR: The Compose file './docker-compose.yml' is invalid because:
+Unsupported config option for services.networks: 'backend-net'
+Unsupported config option for services.volumes: 'mydb_data'
+ubuntu@ip-172-31-3-145:~/my_wp$ ls
+docker-compose.yml
+ubuntu@ip-172-31-3-145:~/my_wp$ vi docker-compose.yml 
+ubuntu@ip-172-31-3-145:~/my_wp$ docker-compose up -d
+
+ubuntu@ip-172-31-3-145:~/my_wp$ vi docker-compose.yml 
+version: "3.9"
+services:
+# 첫번째 서비스 정의
+  mydb:
+    image: mysql:8.0
+    container_name: mysql_app
+    volumes:
+      - mydb_data:/var/lib/mysql
+    # 수동 제어를 제외한 컨테이너 종료 시 자동 재시작
+    restart: always
+    # 호스트 운영체제와 컨테이너의 3306 포트를 바인드
+    # workbench 같은 클라이언트 도구와 연결하기 위해 필요
+    ports:
+      - "3306:3306"
+    networks:
+      - backend-net
+    environment:
+      MYSQL_ROOT_PASSWORD: password#
+      MYSQL_DATABASE: wpdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppassword
+  # 두번째 서비스
+  myweb:
+    #의존성 설정
+    depends_on:
+      - mydb
+    image: wordpress:5.7
+    container_name: wordpress_app
+    ports:
+      - "8888:80"
+    networks:
+      - backend-net
+      - frontend-net
+    volumes:
+      - myweb_data:/var/www/html
+      - ${PWD}/myweb-log:/var/log \
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: mydb:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppassword
+      WORDPRESS_DB_NAME: wpdb
+
+networks:
+  frontend-net: {}
+  backend-net: {}
+
+  # 도커 컴포즈 애플리케이션이 사용할 볼륨 생성 -> docker volume create와 동일
+volumes:
+  mydb_data: {}
+  myweb_data: {}
+```
