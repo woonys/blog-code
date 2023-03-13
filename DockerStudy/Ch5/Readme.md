@@ -405,3 +405,191 @@ volumes:
   mydb_data: {}
   myweb_data: {}
 ```
+
+![img.png](img.png)
+
+![img_1.png](img_1.png)
+
+- 사이트 생성한 뒤 다시 DB 확인 ⇒ 테이블 생성된 것을 확인할 수 있음!
+
+![img_2.png](img_2.png)
+
+- myweb: 프론트엔드 역할을 하는 워드프레스
+- mydb: MySQL 데이터베이스 → 워드프레스에서 API를 통해 데이터 전송 및 관리
+
+- 도커 컴포즈: 여러 번의 도커를 정의하고 실행하지 않고, 관련 애플리케이션을 YAML 코드 파일로 한 번에 구성하여 **내부 환경 구성과 속성을 실행**할 수 있다.
+- 설정값을 캐시하기 때문에 재시작 시 변경이 없다면 캐싱 정보를 그대로 사용해 빠른 서비스 실행 보장 가능
+
+```bash
+ubuntu@ip-172-31-14-16:~/ch5$ docker-compose ps
+    Name                   Command               State                          Ports                       
+------------------------------------------------------------------------------------------------------------
+mysql_app       docker-entrypoint.sh mysqld      Up      0.0.0.0:3306->3306/tcp,:::3306->3306/tcp, 33060/tcp
+wordpress_app   docker-entrypoint.sh apach ...   Up      0.0.0.0:80->80/tcp,:::80->80/tcp                   
+ubuntu@ip-172-31-14-16:~/ch5$ docker-compose down
+Stopping wordpress_app ... done
+Stopping mysql_app     ... done
+Removing wordpress_app ... done
+Removing mysql_app     ... done
+Removing network ch5_backend-net
+Removing network ch5_frontend-net
+ubuntu@ip-172-31-14-16:~/ch5$ docker-compose up -d
+Creating network "ch5_backend-net" with the default driver
+Creating network "ch5_frontend-net" with the default driver
+Creating mysql_app ... done
+Creating wordpress_app ... done
+```
+
+- 껐다 켜도 볼륨 덕분에 정보 그대로 갖고 있는 것을 확인 가능
+![img_3.png](img_3.png)
+
+## 5.1.3 도커 컴포즈 명령어
+
+- 도커 컴포즈 yaml 코드는 다양한 도커 컴포즈 명령어를 통해 애플리케이션의 실행, 관리, 제거까지 가능
+
+### 예제: Flask & Redis 를 이용한 웹 페이지 구축
+
+- 1. Dockerfile 작성
+
+  ```docker
+  # 베이스 이미지 작성
+  FROM python:3.8-alpine
+  
+  #업데이트 및 필요한 패키지 설치
+  RUN apk update && \
+          apk add --no-cache \
+          bash
+  RUN apk add --update build-base python3-dev py-pip
+  
+  # 플라스크 환경 변수 생성
+  # 플라스크는 기본 애플리케이션으로 app.py 인식
+  # FLASK_APP 환경 변수를 통해 애플리케이션 이름 지정
+  # FLASK_ENV=development를 지정하지 않으면 운영 환경(production)으로 설치
+  
+  ENV LIBRARY_PATH=/lib:/usr/lib
+  ENV FLASK_APP=py_app
+  ENV FLASK_ENV=development
+  
+  # 컨테이너 9000번 포트 오픈
+  EXPOSE 9000
+  
+  # WORKDIR 명령어로 /py_app 경로로 이동 & 현재 디렉터리의 app 경로에 모든 파일을 /py_app에 복사
+  
+  WORKDIR /py_app
+  COPY ./app/ .
+  
+  # requirements.txt 목록에 있는 모듈 설치
+  RUN pip install -r requirements.txt
+  
+  # 파이썬 실행 명령으로 py_app.py 코드를 인수로 받아 실행
+  # ENTRYPOINT: 인자 변경 불가
+  ENTRYPOINT ["python"]
+  # CMD: 인자 변경 가능
+  CMD ["py_app.py"]
+  ```
+
+- 2. 플라스크 작성
+  - py_app.py
+
+  ```docker
+  import time
+  import redis
+  from flask import Flask
+  
+  py_app = Flask(__name__)
+  db_cache = redis.Redis(host='redis', port=6379)
+  # 특정 주소에 접속하면 바로 다음 줄에 있는 python_flask() 함수를 호출하는 플라스크 데코레이터
+  
+  def web_hit_cnt():
+      return db_cache.incr('hits')
+  
+  @py_app.route('/')
+  def python_flask():
+      cnt = web_hit_cnt()
+      
+      return '''
+      <h1 style="text-align:center;">Docker-compose application: Python & Flask & Redis</h1>
+          <p style="text-align:center; color:deepskyblue;">Good container service.</p>
+          <p style="text-align:center; color:deepskyblue;">Web access count : {} times</p>
+          '''.format(cnt)
+  
+  # 프로그램 시작 시 아래 코드 실행(기본 포트 ->9000)
+  if __name__ == '__main__':
+      py_app.run(host='0.0.0.0', port=9000, debug=True)
+  ```
+
+  - requirements.txt
+
+  ```docker
+  Flask
+  redis
+  ```
+
+  - tree -a
+
+      ```bash
+      ubuntu@ip-172-31-14-16:~/ch5/flask_redis$ tree -a
+      .
+      ├── Dockerfile
+      ├── app
+      │   ├── py_app.py
+      │   └── requirements.txt
+      └── docker-compose.yaml
+      ```
+
+  - Docker-compose up
+
+      ```bash
+      ubuntu@ip-172-31-14-16:~/ch5/flask_redis$ docker-compose up
+      Creating network "flask_redis_default" with the default driver
+      Pulling redis (redis:6-alpine)...
+      6-alpine: Pulling from library/redis
+      63b65145d645: Pull complete
+      6a83e1b979d3: Pull complete
+      33568fda55fd: Pull complete
+      fb8c77ed282d: Pull complete
+      5b42e9b088d1: Pull complete
+      376c85763ec1: Pull complete
+      Digest: sha256:1782029533179780f082cdeee09c3cdf1c09977d09fcca260282eda211865f8d
+      Status: Downloaded newer image for redis:6-alpine
+      Building flask
+      [+] Building 31.6s (11/11) FINISHED                                                                                                                                                                                                   
+       => [internal] load build definition from Dockerfile                                                                                                                                                                             0.1s
+       => => transferring dockerfile: 1.06kB                                                                                                                                                                                           0.0s
+       => [internal] load .dockerignore                                                                                                                                                                                                0.1s
+       => => transferring context: 2B                                                                                                                                                                                                  0.0s
+       => [internal] load metadata for docker.io/library/python:3.8-alpine                                                                                                                                                             2.0s
+       => [1/6] FROM docker.io/library/python:3.8-alpine@sha256:8518dd6657131d938f283ea97385b1db6724e35d45ddab6cd1c583796e35566a                                                                                                       2.6s
+       => => resolve docker.io/library/python:3.8-alpine@sha256:8518dd6657131d938f283ea97385b1db6724e35d45ddab6cd1c583796e35566a                                                                                                       0.0s
+       => => sha256:8518dd6657131d938f283ea97385b1db6724e35d45ddab6cd1c583796e35566a 1.65kB / 1.65kB                                                                                                                                   0.0s
+       => => sha256:527e03a5527af111edc8a01745d3d2f6ef236296242d3189fecc8b0561756721 1.37kB / 1.37kB                                                                                                                                   0.0s
+       => => sha256:2f38b7ae60ce6b6020c33f80eb1e1b0af561a69eaf7c30eafdcaf29c6e56fc94 7.36kB / 7.36kB                                                                                                                                   0.0s
+       => => sha256:781eddb6f34207e2b80d9ac0c81f1edde119e3ed0628aa9d4eeb6f8c01669b14 622.90kB / 622.90kB                                                                                                                               0.2s
+       => => sha256:c6b62dd466ca0cfb8717e49b1b0a74370c4592eb8acf357898882e70818486b7 11.30MB / 11.30MB                                                                                                                                 0.4s
+       => => sha256:02dd3c1b5d89ca5b952d7ce0cf98b01db4d54f6d2a990f3478fbfa0f7b86050e 227B / 227B                                                                                                                                       0.2s
+       => => extracting sha256:781eddb6f34207e2b80d9ac0c81f1edde119e3ed0628aa9d4eeb6f8c01669b14                                                                                                                                        0.6s
+       => => sha256:1104bcb47a263c20abe3d38f7c57dd2c6c44d48af5e8e649433eb004a8872614 2.88MB / 2.88MB                                                                                                                                   0.5s
+       => => extracting sha256:c6b62dd466ca0cfb8717e49b1b0a74370c4592eb8acf357898882e70818486b7                                                                                                                                        0.9s
+       => => extracting sha256:02dd3c1b5d89ca5b952d7ce0cf98b01db4d54f6d2a990f3478fbfa0f7b86050e                                                                                                                                        0.0s
+       => => extracting sha256:1104bcb47a263c20abe3d38f7c57dd2c6c44d48af5e8e649433eb004a8872614                                                                                                                                        0.4s
+       => [internal] load build context                                                                                                                                                                                                0.0s
+       => => transferring context: 953B                                                                                                                                                                                                0.0s
+       => [2/6] RUN apk update &&         apk add --no-cache         bash                                                                                                                                                              3.3s
+       => [3/6] RUN apk add --update build-base python3-dev py-pip                                                                                                                                                                    11.9s 
+       => [4/6] WORKDIR /py_app                                                                                                                                                                                                        0.1s 
+       => [5/6] COPY ./app/ .                                                                                                                                                                                                          0.1s 
+       => [6/6] RUN pip install -r requirements.txt                                                                                                                                                                                    5.5s 
+       => exporting to image                                                                                                                                                                                                           5.7s 
+       => => exporting layers                                                                                                                                                                                                          5.7s 
+       => => writing image sha256:daa484b6c9e61dac937936fcde696e7d59338d83115fd239c1fd2bda2d9337b1                                                                                                                                     0.0s 
+       => => naming to docker.io/library/flask_redis_flask                                                                                                                                                                             0.0s 
+      WARNING: Image for service flask was built because it did not already exist. To rebuild this image you must use `docker-compose build` or `docker-compose up --build`.                                                                
+      Creating flask_redis_redis_1 ... done
+      Creating flask_redis_flask_1 ... done
+      ```
+
+  - 사이트 접속 → n times!
+
+![img_4.png](img_4.png)
+
+![img_5.png](img_5.png)
