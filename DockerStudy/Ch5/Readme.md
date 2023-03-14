@@ -593,3 +593,57 @@ Creating wordpress_app ... done
 ![img_4.png](img_4.png)
 
 ![img_5.png](img_5.png)
+
+### 1. docker-compose `up`
+
+
+> 💡 up은 컴포즈 yaml 코드에 있는 이미지를 이용해 컨테이너 서비스를 실행한다.
+
+| 옵션 | 설명 |
+| --- | --- |
+| -d | 백그라운드로 컨테이너 서비스 실행 & 새로 생성된 컨테이너 이름을 화면에 출력 |
+| —build | 컨테이너 서비스 시작 전에 이미지 빌드. Dockerfile이나 기타 소스 코드 변동이 있을 때 재빌드하기 위해 사용(좋다!) |
+- docker-compose.yaml
+
+```bash
+version: '3.8'
+services:
+  server_web:
+    image: httpd:2
+  server_db:
+    image: redis:6-alpine
+```
+
+```bash
+ubuntu@ip-172-31-14-16:~/ch5/scale_option$ docker-compose up --scale server_db=2 --scale server_web=2 -d
+Creating scale_option_server_web_2 ... done
+Creating scale_option_server_db_2  ... done
+ubuntu@ip-172-31-14-16:~/ch5/scale_option$ docker-compose ps
+          Name                         Command               State    Ports  
+-----------------------------------------------------------------------------
+scale_option_server_db_1    docker-entrypoint.sh redis ...   Up      6379/tcp
+scale_option_server_db_2    docker-entrypoint.sh redis ...   Up      6379/tcp
+scale_option_server_web_1   httpd-foreground                 Up      80/tcp  
+scale_option_server_web_2   httpd-foreground                 Up      80/tcp
+```
+
+```bash
+ubuntu@ip-172-31-14-16:~/ch5/scale_option$ docker-compose down
+Stopping scale_option_server_db_2  ... done
+Stopping scale_option_server_web_2 ... done
+Stopping scale_option_server_db_1  ... done
+Stopping scale_option_server_web_1 ... done
+Removing scale_option_server_db_2  ... done
+Removing scale_option_server_web_2 ... done
+Removing scale_option_server_db_1  ... done
+Removing scale_option_server_web_1 ... done
+Removing network scale_option_default
+```
+
+### 2. docker-compose `down`
+
+> 💡 up 명령과 반대로, 정의된 컨테이너 서비스, 볼륨, 네트워크 모두 정지시킨 후 삭제
+
+### 3. docker-compose `stop` 서비스명
+
+> 💡 stop: 멀티 컨테이너 서비스 중 특정 컨테이너 중지시킬 때 사용
