@@ -647,3 +647,119 @@ Removing network scale_option_default
 ### 3. docker-compose `stop` 서비스명
 
 > 💡 stop: 멀티 컨테이너 서비스 중 특정 컨테이너 중지시킬 때 사용
+
+
+…(생략)
+
+## 5.1.4 도커 컴포즈 애플리케이션 로드 밸런스 구성
+
+> 💡 3.2절의 <Nginx를 이용한 컨테이너 로드 밸런스 구축>에서 사용했던 도커 명령어 방식의 로드 밸런스를 도커 컴포즈로 재구성해보자.
+
+- `Nginx`
+  - Dockerfile
+
+      ```docker
+      FROM nginx
+      RUN rm /etc/nginx/conf.d/default.conf
+      COPY nginx.conf /etc/nginx/conf.d/default.conf
+      ```
+
+  - `nginx.conf`
+
+      ```bash
+      upstream web-alb {
+              server 172.17.0.1:5001;
+              server 172.17.0.1:5002;
+              server 172.17.0.1:5003;
+      }
+      
+      server {
+              location / {
+                      proxy_pass http://web-alb;
+              }
+      }
+      ```
+
+- `pyfla_app(Flask)`
+  - Dockerfile
+
+      ```docker
+      FROM python:3
+      COPY ./requirements.txt /requirements.txt
+      WORKDIR /
+      RUN pip install -r requirements.txt
+      COPY . /
+      ENTRYPOINT [ "python3" ]
+      CMD [ "pyfla_app1.py" ]
+      ```
+
+  - pyfla_app.py
+
+      ```python
+      from flask import request, Flask
+      import json
+      
+      app1 = Flask(__name__)
+      
+      @app1.route('/')
+      def hello_world():
+          return 'Web Application [1]' + '\n'
+      
+      if __name__ == '__main__':
+          app1.run(debug=True, host='0.0.0.0')
+      ```
+
+  - requirements.txt
+
+      ```
+      Flask==1.1.1
+      ```
+
+- `docker-compose`
+
+    ```dockerfile
+    version: '3'
+    services:
+      pyfla_app1:
+        build: ./pyfla_app1
+        ports:
+        - "5001:5000"
+      pyfla_app2:
+        build: ./pyfla_app2
+        ports:
+        - "5002:5000"
+      pyfla_app3:
+        build: ./pyfla_app3
+        ports:
+        - "5003:5000"
+      nginx:
+        build: ./nginx_alb
+        ports:
+        - "8080:80"
+        depends_on:
+          - pyfla_app1
+          - pyfla_app2
+          - pyfla_app3
+    ```
+
+- `tree -a` 로 구조 확인
+
+    ```bash
+    .
+    ├── docker-compose.yml
+    ├── nginx_alb
+    │   ├── Dockerfile
+    │   └── nginx.conf
+    ├── pyfla_app1
+    │   ├── Dockerfile
+    │   ├── pyfla_app1.py
+    │   └── requirements.txt
+    ├── pyfla_app2
+    │   ├── Dockerfile
+    │   ├── pyfla_app2.py
+    │   └── requirements.txt
+    └── pyfla_app3
+        ├── Dockerfile
+        ├── pyfla_app3.py
+        └── requirements.txt
+    ```
