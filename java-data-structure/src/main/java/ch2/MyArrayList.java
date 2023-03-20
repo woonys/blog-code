@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 
 public class MyArrayList<E> implements List<E> {
     int size;
@@ -122,7 +123,16 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public int indexOf(Object o) {
+
         return 0;
+    }
+
+    private boolean equal(Object o) {
+        for (E e : array) {
+            if (Objects.equals(e, o)) {
+
+            }
+        }
     }
 
     @Override
