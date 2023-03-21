@@ -71,7 +71,11 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public boolean addAll(Collection<? extends E> c) {
-        return false;
+        boolean flag = true;
+        for (E element: c) {
+            flag &= add(element);
+        }
+        return flag;
     }
 
     @Override
@@ -118,21 +122,23 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public E remove(int index) {
-        return null;
+        E element = get(index);
+        for (int i = index; i < size - 1; i++) {
+            array[i] = array[i+1]; // 한 칸씩 땡긴다.
+        }
+        size--;
+        return element;
     }
 
     @Override
     public int indexOf(Object o) {
 
-        return 0;
-    }
-
-    private boolean equal(Object o) {
-        for (E e : array) {
-            if (Objects.equals(e, o)) {
-
+        for (int i = 0; i< size; i++) {
+            if (Objects.equals(array[i], o)) {
+                return i;
             }
         }
+        return -1;
     }
 
     @Override
