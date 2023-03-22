@@ -85,7 +85,11 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        return false;
+        boolean flag = false;
+        for (Object obj : c) {
+            flag |= remove(obj);
+        }
+        return flag;
     }
 
     @Override
@@ -116,8 +120,15 @@ public class MyArrayList<E> implements List<E> {
     }
 
     @Override
-    public void add(int index, E element) {
-
+    public void add(int index, E element) { // 인덱스와 요소를 인자로 받는 메소드
+        if (index < 0 || index > size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        add(element);
+        for (int i = size - 1; i > index; i--) { // index 앞에는 건드리지 않고 그 뒤에만 다 한 칸씩 미룬다.
+            array[i] = array[i - 1];
+        }
+        array[index] = element;
     }
 
     @Override
