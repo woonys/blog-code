@@ -1,5 +1,6 @@
 package ch2;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -17,27 +18,38 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public int size() {
-        return 0;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
+        if (Objects.equals(size, 0)) {
+            return true;
+        }
         return false;
     }
 
     @Override
     public boolean contains(Object o) {
+        for (E e : array) {
+            if (Objects.equals(e, 0)) {
+                return true;
+            }
+        }
         return false;
     }
 
     @Override
     public Iterator<E> iterator() {
-        return null;
+        // Array의 복사본을 만든다
+        E[] copy = Arrays.copyOf(array, size);
+        // 리스트로 변환한 뒤, 해당 리스트의 iterator() 메소드를 반환한다.
+        return Arrays.asList(copy).iterator();
     }
 
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        return array;
     }
 
     @Override
@@ -116,7 +128,7 @@ public class MyArrayList<E> implements List<E> {
             throw new IndexOutOfBoundsException();
         }
         array[index] = element;
-        return null;
+        return ;
     }
 
     @Override

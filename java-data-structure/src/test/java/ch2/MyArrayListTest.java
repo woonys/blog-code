@@ -6,21 +6,21 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class MyArrayListTest {
     protected List<Integer> mylist;
     protected List<Integer> list;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        list = new ArrayList<Integer>();
+        list = new ArrayList<>();
         list.add(1);
         list.add(2);
         list.add(3);
 
-        mylist = new MyArrayList<Integer>();
+        mylist = new MyArrayList<>();
         mylist.addAll(list);
     }
 
