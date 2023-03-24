@@ -73,7 +73,12 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public boolean remove(Object o) {
-        return false;
+        int i = indexOf(o);
+        if (Objects.equals(-1, i)) {
+            return false;
+        }
+        remove(i);
+        return true;
     }
 
     @Override
@@ -111,7 +116,8 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public void clear() {
-
+        removeAll(List.of(array));
+        size = 0;
     }
 
     @Override
@@ -124,11 +130,9 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public E set(int index, E element) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException();
-        }
+        E old = get(index);
         array[index] = element;
-        return ;
+        return old;
     }
 
     @Override
