@@ -31,8 +31,8 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public boolean contains(Object o) {
-        for (E e : array) {
-            if (Objects.equals(e, 0)) {
+        for (int i=0; i < size; i++) {
+            if (Objects.equals(array[i], o)) {
                 return true;
             }
         }
@@ -83,7 +83,13 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        return false;
+        boolean flag = true;
+        for (Object o : c) {
+            if (!contains(o)) {
+                return false;
+            }
+        }
+        return flag;
     }
 
     @Override
@@ -116,7 +122,7 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public void clear() {
-        removeAll(List.of(array));
+        array = (E[]) new Object[10];
         size = 0;
     }
 
@@ -170,7 +176,13 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public int lastIndexOf(Object o) {
-        return 0;
+        int index = -1;
+        for (int i = 0; i < array.length; i++) {
+            if (Objects.equals(array[i], o)) {
+                index = i;
+            }
+        }
+        return index;
     }
 
     @Override
@@ -185,6 +197,10 @@ public class MyArrayList<E> implements List<E> {
 
     @Override
     public List<E> subList(int fromIndex, int toIndex) {
-        return null;
+        List<E> sublist = new MyArrayList<>();
+        for (int i = fromIndex; i < toIndex; i++) {
+            sublist.add(array[i]);
+        }
+        return sublist;
     }
 }

@@ -99,8 +99,8 @@ public class MyArrayListTest {
      */
     @Test
     public void testContains() {
-        assertEquals(mylist.contains(1), true);
-        assertEquals(mylist.contains(4), false);
+        assertEquals(mylist.contains(Integer.valueOf(1)), true);
+        assertEquals(mylist.contains(Integer.valueOf(4)), false);
         assertEquals(mylist.contains(null), false);
         mylist.add(null);
         assertEquals(mylist.contains(null), true);
@@ -179,25 +179,25 @@ public class MyArrayListTest {
      */
     @Test
     public void testRemoveObject() {
-        Integer flag = mylist.remove(2);
+        boolean flag = mylist.remove(Integer.valueOf(2));
         assertEquals(flag, true);
         assertEquals(mylist.size(), 2);
         assertEquals(mylist.get(1), 3);
         //System.out.println(Arrays.toString(mal.toArray()));
 
-        flag = mylist.remove(1);
+        flag = mylist.remove(Integer.valueOf(1));
         assertEquals(flag, true);
         assertEquals(mylist.size(), 1);
         assertEquals(mylist.get(0), 3);
         //System.out.println(Arrays.toString(mal.toArray()));
 
-        flag = mylist.remove(5);
+        flag = mylist.remove(Integer.valueOf(5));
         assertEquals(flag, false);
         assertEquals(mylist.size(), 1);
         assertEquals(mylist.get(0), 3);
         //System.out.println(Arrays.toString(mal.toArray()));
 
-        flag = mylist.remove(3);
+        flag = mylist.remove(Integer.valueOf(3));
         assertEquals(flag, true);
         assertEquals(mylist.size(), 0);
         //System.out.println(Arrays.toString(mal.toArray()));
