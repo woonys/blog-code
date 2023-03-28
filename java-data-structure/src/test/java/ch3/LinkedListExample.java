@@ -16,8 +16,12 @@ public class LinkedListExample {
         node3.next = null;
         //when
 
-        System.out.println(node1);
-
+        ListNode node0 = new ListNode(0, node1);
         //then
+        ListNode node = node0;
+        while (node != null) {
+            System.out.println(node.data);
+            node = node.next;
+        }
     }
 }

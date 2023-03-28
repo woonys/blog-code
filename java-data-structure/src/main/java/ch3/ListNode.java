@@ -10,6 +10,7 @@ public class ListNode {
     }
     public ListNode(Object data) {
         this.data = data;
+        this.next = null;
     }
 
     public ListNode(Object data, ListNode next) {
