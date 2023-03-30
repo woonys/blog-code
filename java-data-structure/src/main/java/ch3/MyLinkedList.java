@@ -1,6 +1,7 @@
 package ch3;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -36,6 +37,9 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public boolean isEmpty() {
+        if (Objects.equals(size, 0)) {
+            return true;
+        }
         return false;
     }
 
@@ -84,13 +88,11 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public boolean addAll(Collection<? extends E> c) {
-
-        for (E e : c) {
-            Node head = new Node(e, null);
-            head = head.next;
-            size++;
+        boolean flag = true;
+        for (E element: c) {
+            flag &= add(element);
         }
-        return true;
+        return flag;
     }
 
     @Override
@@ -110,7 +112,8 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public void clear() {
-
+        this.head = null;
+        this.size = 0;
     }
 
     @Override
@@ -135,21 +138,31 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public int indexOf(Object o) {
-        if (head == null) {
-            return -1;
-        } else if (Objects.equals(head.data, o)) {
-            return 0;
-        } else {
-            int index = 0;
-            Node node = head;
-            for (; node.next != null; node = node.next) {
-                index++;
-                if (Objects.equals(node.data, o)) {
-                    return index;
-                }
+        Node node = head;
+        for (int i=0; i<size; i++) {
+            if (Objects.equals(o, node.data)) {
+                return i;
             }
+            node = node.next;
         }
         return -1;
+        /* My solution
+//        if (head == null) {
+//            return -1;
+//        } else if (Objects.equals(head.data, o)) {
+//            return 0;
+//        } else {
+//            int index = 0;
+//            Node node = head;
+//            for (; node.next != null; node = node.next) {
+//                index++;
+//                if (Objects.equals(node.data, o)) {
+//                    return index;
+//                }
+//            }
+//        }
+//        return -1;
+         */
     }
 
     @Override
