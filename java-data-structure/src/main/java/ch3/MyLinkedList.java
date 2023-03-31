@@ -1,7 +1,6 @@
 package ch3;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -55,7 +54,14 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        Object[] array = new Object[size];
+
+        Node node = head;
+        for (int i = 0; i < size; i++) {
+            array[i] = node.data;
+            node = node.next;
+        }
+        return array;
     }
 
     @Override
@@ -118,7 +124,11 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public E get(int index) {
-        return null;
+        Node node = head;
+        for (int i = 0; i < index; i++) {
+            node = node.next;
+        }
+        return node.data;
     }
 
     @Override
@@ -128,7 +138,14 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public void add(int index, E element) {
-
+        Node prev = head;
+        for (int i = 0; i < index-1; i++) {
+            prev = prev.next;
+        }
+        Node next = prev.next;
+        Node addNode = new Node(element, next);
+        prev.next = addNode;
+        size++;
     }
 
     @Override
