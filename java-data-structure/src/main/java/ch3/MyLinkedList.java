@@ -31,7 +31,7 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public int size() {
-        return 0;
+        return this.size;
     }
 
     @Override
@@ -44,6 +44,13 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public boolean contains(Object o) {
+        Node node = head;
+        for (int i = 0; i < size; i++) {
+            if (Objects.equals(o, node.data)) {
+                return true;
+            }
+            node = node.next;
+        }
         return false;
     }
 
@@ -84,12 +91,30 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public boolean remove(Object o) {
+        Node prev = head;
+        if (Objects.equals(o, prev.data)) {
+            head = head.next;
+            size--;
+            return true;
+        }
+        for (int i = 0; i < size-1; i++) {
+            if (Objects.equals(o, prev.next.data)) {
+                prev.next = prev.next.next;
+                size--;
+                return true;
+            }
+        }
         return false;
     }
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        return false;
+        for (Object o : c) {
+            if (!contains(o)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -133,18 +158,39 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public E set(int index, E element) {
-        return null;
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException();
+        }
+        Node node = head;
+        for (int i = 0; i < index; i++) {
+            node = node.next;
+        }
+        E old = node.data;
+        node.data = element;
+        return old;
+
     }
 
     @Override
     public void add(int index, E element) {
+        if (index < 0 || index > size) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Node addNode = new Node(element, null);
+        if (index == 0) {
+            addNode.next = head;
+            head = addNode;
+            size++;
+            return;
+        }
         Node prev = head;
         for (int i = 0; i < index-1; i++) {
             prev = prev.next;
         }
         Node next = prev.next;
-        Node addNode = new Node(element, next);
         prev.next = addNode;
+        addNode.next = next;
         size++;
     }
 
@@ -184,7 +230,15 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public int lastIndexOf(Object o) {
-        return 0;
+        Node node = head;
+        int lastIndex = -1;
+        for (int i = 0; i < size; i++) {
+            if (Objects.equals(o, node.data)) {
+                lastIndex = i;
+            }
+            node = node.next;
+        }
+        return lastIndex;
     }
 
     @Override

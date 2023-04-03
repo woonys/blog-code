@@ -11,18 +11,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ch2.MyArrayList;
-import ch2.MyArrayListTest;
 
-public class MyLinkedListTest extends MyArrayListTest{
+public class MyLinkedListTest {
+
+    protected List<Integer> mylist;
+    protected List<Integer> list;
 
     @BeforeEach
     public void setUp() {
-        list = new ArrayList<Integer>();
+        list = new ArrayList<>();
         list.add(1);
         list.add(2);
         list.add(3);
 
-        mylist = new MyLinkedList<Integer>();
+        mylist = new MyLinkedList<>();
         mylist.addAll(list);
     }
 
@@ -280,5 +282,4 @@ public class MyLinkedListTest extends MyArrayListTest{
         Object[] array = mylist.toArray();
         assertEquals((Integer)array[0], 1);
     }
-
 }
