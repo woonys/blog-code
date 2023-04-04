@@ -1,5 +1,6 @@
 package ch3;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +14,11 @@ public class MyLinkedList<E> implements List<E> {
     private class Node {
         public E data;
         public Node next;
+
+        public Node() {
+            this.data = null;
+            this.next = null;
+        }
 
         public Node(E data) {
             this.data = data;
@@ -56,7 +62,8 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public Iterator<E> iterator() {
-        return null;
+        E[] array = (E[]) toArray();
+        return Arrays.asList(array).iterator();
     }
 
     @Override
@@ -133,7 +140,10 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        return false;
+        for (Object o : c) {
+            remove(o);
+        }
+        return true;
     }
 
     @Override
@@ -196,7 +206,21 @@ public class MyLinkedList<E> implements List<E> {
 
     @Override
     public E remove(int index) {
-        return null;
+        int start = 0;
+        E old;
+        Node prev = head;
+        if (Objects.equals(start, index)) {
+             old = head.data;
+            head = head.next;
+            size--;
+            return old;
+        }
+        for (int i = 0; i < index-1; i++) {
+            prev = prev.next;
+        }
+        old = prev.next.data;
+        prev.next = prev.next.next;
+        return old;
     }
 
     @Override
