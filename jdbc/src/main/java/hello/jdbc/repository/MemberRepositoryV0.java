@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.NoSuchElementException;
 
 import hello.jdbc.connection.DBConnectionUtil;
 import hello.jdbc.domain.Member;
@@ -33,6 +34,34 @@ public class MemberRepositoryV0 {
         } finally {
             // 작업 끝났으면 리소스 관리 측면에서 자원 닫아줘야!
             close(con, pstmt,null); // 항상 close 호출되는 게 보장되도록 finally에서 호출한다!
+        }
+    }
+
+    public Member findById(String memberId) throws SQLException {
+        String sql = "select * from member where member_id = ?"; // ? -> 파라미터 바인딩! SQLInjection 공격 방어를 위해!
+        Connection con = null; // try-catch-finally 선언을 위해 바깥에서 null 선언..
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, memberId); // 파라미터 넣어준다.
+            rs = pstmt.executeQuery(); // 조회할 때는 executeQuery() 메소드를 사용한다.
+            if (rs.next()) { // 처음에는 아무 곳도 안 가리킨다 -> 한 칸 이동해야 데이터 있는지 체크
+                Member member = new Member();
+                member.setMemberId(rs.getString("member_id"));
+                member.setMoney(rs.getInt("money"));
+                return member;
+            } else {
+                throw new NoSuchElementException("member not found: memberId = " + memberId);
+                // memberId와 같은 키값은 로그 찍을 때 꼭 넣어주자.
+            }
+
+        } catch (SQLException e) {
+            log.error("db error", e);
+            throw e;
+        } finally {
+            close(con, pstmt, rs); // 해제할 때는 rs -> pstmt -> con 순으로
         }
     }
 
