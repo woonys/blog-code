@@ -5,13 +5,25 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
 @Entity
-@NoArgsConstructor
+@Getter
 public class Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private boolean isReserved;
+    private ReservationStatus reservationStatus;
+
+    public Ticket() {
+        this.reservationStatus = ReservationStatus.WAITING;
+    }
+
+    public void succeed() {
+        this.reservationStatus = ReservationStatus.RESERVED;
+    }
+
+    public void failed() {
+        this.reservationStatus = ReservationStatus.FAILED;
+    }
 }
