@@ -11,10 +11,8 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.internal.util.Platform;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,11 +27,11 @@ import hello.jdbc.repository.MemberRepositoryV3;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 트랜잭션 -  커넥션 파라미터 전달 방식 동기화
+ * 트랜잭션 - DataSource, TransactionManager 자동 등록
  */
 @Slf4j
 @SpringBootTest
-class MemberServiceV3_3Test {
+class MemberServiceV3_4Test {
 
     public static final String MEMBER_A = "memberA";
     public static final String MEMBER_B = "memberB";
@@ -46,19 +44,16 @@ class MemberServiceV3_3Test {
 
     @TestConfiguration
     static class TestConfig {
-        @Bean
-        DataSource dataSource() {
-            return new DriverManagerDataSource(URL, USERNAME, PASSWORD);
-        }
 
-        @Bean
-        PlatformTransactionManager transactionManager() {
-            return new DataSourceTransactionManager(dataSource());
+        private final DataSource dataSource;
+
+        public TestConfig(DataSource dataSource) {
+            this.dataSource = dataSource;
         }
 
         @Bean
         MemberRepositoryV3 memberRepository() {
-            return new MemberRepositoryV3(dataSource());
+            return new MemberRepositoryV3(dataSource);
         }
 
         @Bean
@@ -66,12 +61,6 @@ class MemberServiceV3_3Test {
             return new MemberServiceV3_3(memberRepository());
         }
     }
-//    @BeforeEach
-//    void before() {
-//        DriverManagerDataSource dataSource = new DriverManagerDataSource(URL, USERNAME, PASSWORD);
-//        memberRepository = new MemberRepositoryV3(dataSource);
-//        memberService = new MemberServiceV3_3(memberRepository);
-//    }
 
     @AfterEach
     void after() throws SQLException {
