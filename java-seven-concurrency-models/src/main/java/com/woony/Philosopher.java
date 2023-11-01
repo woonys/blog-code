@@ -7,16 +7,31 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Philosopher extends Thread {
     private final String name;
-    private final Chopstick left, right;
+    private final Chopstick first, second;
     private Random random;
     private boolean running = true;
     public static class Chopstick {
+        private long id;
+
+        public Chopstick(long id) {
+            this.id = id;
+        }
+
+        public long getId() {
+            return id;
+        }
     }
 
     public Philosopher(String name, Chopstick left, Chopstick right) {
+        if (left.getId() < right.getId()) { // 왼쪽 젓가락을 오른손에 쥐어야 할 수도 있으니
+            first = left;
+            second = right;
+        } else {
+            first = right;
+            second = left;
+        }
         this.name = name;
-        this.left = left;
-        this.right = right;
+
         this.random = new Random();
     }
 
@@ -37,9 +52,9 @@ public class Philosopher extends Thread {
     }
 
     private void eat() throws InterruptedException {
-        synchronized (left) {
+        synchronized (first) {
             System.out.println(name + "가 왼쪽 젓가락을 집었습니다.");
-            synchronized (right) {
+            synchronized (second) {
                 System.out.println(name + "가 오른쪽 젓가락을 집었습니다.");
                 Thread.sleep(random.nextInt(1000)); // eat
                 System.out.println(name + "가 식사를 마쳤습니다.");
