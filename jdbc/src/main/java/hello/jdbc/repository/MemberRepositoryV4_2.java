@@ -75,7 +75,7 @@ public class MemberRepositoryV4_2 implements MemberRepository{
                 // memberId와 같은 키값은 로그 찍을 때 꼭 넣어주자.
             }
         } catch (SQLException e) {
-            throw exTranslator.translate("findById", sql, e);
+            throw exTranslator.translate(" findById", sql, e);
         } finally {
             close(con, pstmt, rs); // 해제할 때는 rs -> pstmt -> con 순으로
         }
