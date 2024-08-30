@@ -58,4 +58,14 @@ class Solution {
         }
         return true;
     }
+
+    /** Book solution 2
+     * Runtime: 16ms Beats 19.80%
+     * Memory: 44.90MB Beats 31.04%
+     **/
+    public boolean isPalindrome3(String s) {
+        String s_filtered = s.replaceAll("[^A-Za-z0-9]", "").toLowerCase();
+        String s_filtered_reverse = new StringBuilder(s_filtered).reverse().toString();
+        return s_filtered.equals(s_filtered_reverse);
+    }
 }
